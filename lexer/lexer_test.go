@@ -6,19 +6,6 @@ import (
 )
 
 func TestNextToken(t *testing.T) {
-    // input := `let five = 5;
-    //     let ten = 10;
-    //     let add = fn(x, y) {
-    //     x + y;
-    //     };
-    //     let result = add(five, ten);
-    //     !-/*5;
-    //     5 < 10 > 5;
-    //     if (5 < 10) {
-    //     return true;
-    //     } else {
-    //     return false;
-    //     }`   
     input := `let five = 5;
         let ten = 10;
         let add = fn(x, y) {
@@ -33,7 +20,11 @@ func TestNextToken(t *testing.T) {
             return false;
         }
         10 == 10;
-        10 != 9;`   
+        10 != 9;
+
+        1 <= 10;
+        10 >= 0;
+    `   
     tests := []struct {
         expectedType token.TokenType
         expectedLiteral string
@@ -110,6 +101,14 @@ func TestNextToken(t *testing.T) {
 		{token.INT, "10"},
 		{token.NOT_EQ, "!="},
 		{token.INT, "9"},
+		{token.SEMICOLON, ";"},
+		{token.INT, "1"},
+		{token.LT_EQ, "<="},
+		{token.INT, "10"},
+		{token.SEMICOLON, ";"},
+		{token.INT, "10"},
+		{token.GT_EQ, ">="},
+		{token.INT, "0"},
 		{token.SEMICOLON, ";"},
 		{token.EOF, ""},
     }

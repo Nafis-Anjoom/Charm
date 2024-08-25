@@ -2,7 +2,6 @@ package lexer
 
 import (
 	"charm/token"
-	"fmt"
 )
 
 // position points to the character in the input that corresponds to ch rune
@@ -80,14 +79,23 @@ func (lexer *Lexer) NextToken() token.Token {
             if lexer.peekChar() == '=' {
                 lexer.readChar()
                 tok = token.Token{Type: token.NOT_EQ, Literal:  "!="}
-                fmt.Println(tok)
             } else {
                 tok = newToken(token.BANG, lexer.ch)
             }
         case '<':
-            tok = newToken(token.LT, lexer.ch)
+            if lexer.peekChar() == '=' {
+                lexer.readChar()
+                tok = token.Token{Type: token.LT_EQ, Literal: "<="}
+            } else {
+                tok = newToken(token.LT, lexer.ch)
+            }
         case '>':
-            tok = newToken(token.GT, lexer.ch)
+            if lexer.peekChar() == '=' {
+                lexer.readChar()
+                tok = token.Token{Type: token.GT_EQ, Literal: ">="}
+            } else {
+                tok = newToken(token.GT, lexer.ch)
+            }
         case 0:
             tok.Literal = ""
             tok.Type = token.EOF
