@@ -1,9 +1,12 @@
 package main
 
-import "charm/lexer"
+import (
+    "fmt"
+    "os"
+    "charm/repl"
+)
 
 func main() {
-    input := "+1-"
-
-    lexer.New(input)
+    fmt.Printf("Charm v0.1\n")
+    repl.Start(os.Stdin, os.Stdout)
 }
