@@ -4,6 +4,7 @@ import (
 	"charm/ast"
 	"charm/lexer"
 	"charm/token"
+    "fmt"
 )
 
 type Parser struct {
@@ -11,15 +12,31 @@ type Parser struct {
 
     currToken token.Token
     peekToken token.Token
+
+    errors []string
 }
 
 func New(lexer *lexer.Lexer) *Parser {
-    parser := &Parser{lexer: lexer}
+    parser := &Parser{
+        lexer: lexer,
+        errors: []string{},
+    }
 
     parser.nextToken()
     parser.nextToken()
+
 
     return parser
+}
+
+func (parser *Parser) Err(expectedType token.TokenType) {
+    msg := fmt.Sprintf("expected next token to be %s, got %s instead",
+        expectedType, parser.peekToken.Type)
+    parser.errors = append(parser.errors, msg)
+}
+
+func (parser *Parser) GetErrors() []string {
+    return parser.errors
 }
 
 func (parser *Parser) nextToken() {
@@ -76,7 +93,9 @@ func (parser *Parser) parseLetStatement() *ast.LetStatement {
 
 func (parser *Parser) expectPeek(expectedType token.TokenType) bool {
     if parser.peekToken.Type != expectedType {
+        parser.Err(expectedType)
         return false
+
     }
     parser.nextToken()
     return true
