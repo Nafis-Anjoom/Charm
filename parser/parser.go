@@ -25,7 +25,6 @@ func New(lexer *lexer.Lexer) *Parser {
     parser.nextToken()
     parser.nextToken()
 
-
     return parser
 }
 
@@ -65,6 +64,8 @@ func (parser *Parser) parseStatement() ast.Statement {
     switch parser.currToken.Type {
         case token.LET:
             return parser.parseLetStatement()
+        case token.RETURN:
+            return parser.parseReturnStatement()
         default:
             return nil
     }
@@ -91,11 +92,23 @@ func (parser *Parser) parseLetStatement() *ast.LetStatement {
     return stmt
 }
 
+func (parser *Parser) parseReturnStatement() *ast.ReturnStatement {
+    stmt := &ast.ReturnStatement{Token: parser.currToken}
+
+    parser.nextToken()
+
+    // skipping expression for now
+    for parser.currToken.Type != token.SEMICOLON {
+        parser.nextToken()
+    }
+
+    return stmt
+}
+
 func (parser *Parser) expectPeek(expectedType token.TokenType) bool {
     if parser.peekToken.Type != expectedType {
         parser.Err(expectedType)
         return false
-
     }
     parser.nextToken()
     return true
