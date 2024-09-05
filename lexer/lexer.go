@@ -29,8 +29,6 @@ func (lexer *Lexer) readChar() {
 
     lexer.position = lexer.readPosition
     lexer.readPosition += 1
-    // fmt.Println("position ", lexer.position)
-    // fmt.Println("readPosition ", lexer.position)
 }
 
 func (lexer *Lexer) peekChar() rune {
@@ -111,7 +109,6 @@ func (lexer *Lexer) NextToken() token.Token {
             }else {
                 tok = newToken(token.ILLEGAL, lexer.ch)
             }
-
     }
 
     lexer.readChar()
@@ -120,8 +117,8 @@ func (lexer *Lexer) NextToken() token.Token {
 
 func (lexer *Lexer) skipWhitespace() {
     for lexer.ch == ' ' || lexer.ch == '\t' || lexer.ch == '\n' || lexer.ch == '\r' {
-    lexer.readChar()
-}
+        lexer.readChar()
+    }
 }
 
 func isLetter(ch rune) bool {
@@ -143,6 +140,7 @@ func (lexer *Lexer) readIdentifier() string {
     return string(lexer.input[position: lexer.position])
 }
 
+// TODO: support floats
 func (lexer *Lexer) readNumber() string {
     position := lexer.position
 
