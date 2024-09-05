@@ -4,7 +4,24 @@ import (
 	"charm/ast"
 	"charm/lexer"
 	"charm/token"
-    "fmt"
+	"fmt"
+	"strconv"
+)
+
+type (
+    prefixParseFn func() ast.Expression
+    infixParseFn func(ast.Expression) ast.Expression
+)
+
+const (
+    _ int = iota
+    LOWEST
+    EQUALS // ==
+    LESSGREATER // > or <
+    SUM // +
+    PRODUCT // *
+    PREFIX // -X or !X
+    CALL // myFunction(X)
 )
 
 type Parser struct {
@@ -14,6 +31,9 @@ type Parser struct {
     peekToken token.Token
 
     errors []string
+
+    prefixParseFns map[token.TokenType]prefixParseFn
+    infixParseFns map[token.TokenType]infixParseFn
 }
 
 func New(lexer *lexer.Lexer) *Parser {
@@ -25,7 +45,20 @@ func New(lexer *lexer.Lexer) *Parser {
     parser.nextToken()
     parser.nextToken()
 
+    parser.prefixParseFns = make(map[token.TokenType]prefixParseFn)
+    parser.registerPrefix(token.IDENT, parser.parseIdentifier)
+    parser.registerPrefix(token.INT, parser.parseIntegerLiteral)
+
     return parser
+}
+
+func (parser *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
+    parser.prefixParseFns[tokenType] = fn
+}
+
+
+func (parser *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
+    parser.infixParseFns[tokenType] = fn
 }
 
 func (parser *Parser) Err(expectedType token.TokenType) {
@@ -67,7 +100,7 @@ func (parser *Parser) parseStatement() ast.Statement {
         case token.RETURN:
             return parser.parseReturnStatement()
         default:
-            return nil
+            return parser.parseExpressionStatement()
     }
 }
 
@@ -105,6 +138,34 @@ func (parser *Parser) parseReturnStatement() *ast.ReturnStatement {
     return stmt
 }
 
+func (parser *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+    stmt := &ast.ExpressionStatement{Token: parser.currToken}
+
+    stmt.Expression = parser.parseExpression(LOWEST)
+
+    if parser.peekToken.Type == token.SEMICOLON {
+        parser.nextToken()
+    }
+
+    return stmt
+}
+
+func (parser *Parser) parseExpression(precedence int) ast.Expression {
+    prefix := parser.prefixParseFns[parser.currToken.Type]
+
+    if prefix == nil {
+        return nil
+    }
+
+    leftExp := prefix()
+
+    return leftExp
+}
+
+func (parser *Parser) parseIdentifier() ast.Expression {
+    return &ast.Identifier{Token: parser.currToken, Value: parser.currToken.Literal}
+}
+
 func (parser *Parser) expectPeek(expectedType token.TokenType) bool {
     if parser.peekToken.Type != expectedType {
         parser.Err(expectedType)
@@ -112,5 +173,21 @@ func (parser *Parser) expectPeek(expectedType token.TokenType) bool {
     }
     parser.nextToken()
     return true
+}
+
+func (parser *Parser) parseIntegerLiteral() ast.Expression {
+    intLit := &ast.IntegerLiteral{Token: parser.currToken}
+
+    value, err := strconv.ParseInt(parser.currToken.Literal, 0, 64)
+    if err != nil {
+        // abstract away in a function to append to errors
+        msg := fmt.Sprintf("could not parse %q as integer", parser.currToken.Literal)
+        parser.errors = append(parser.errors, msg)
+
+        return nil
+    }
+
+    intLit.Value = value
+    return intLit
 }
 
