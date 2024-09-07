@@ -64,6 +64,7 @@ func New(lexer *lexer.Lexer) *Parser {
     parser.registerPrefix(token.TRUE, parser.parseBooleanLiteral)
     parser.registerPrefix(token.FALSE, parser.parseBooleanLiteral)
     parser.registerPrefix(token.LPAREN, parser.parseGroupedExpression)
+    parser.registerPrefix(token.IF, parser.parseIfExpression)
 
     parser.infixParseFns = make(map[token.TokenType]infixParseFn)
     parser.registerInfix(token.PLUS, parser.parseInfixExpression)
@@ -203,6 +204,57 @@ func (parser *Parser) parseExpression(precedence int) ast.Expression {
 
 func (parser *Parser) parseIdentifier() ast.Expression {
     return &ast.Identifier{Token: parser.currToken, Value: parser.currToken.Literal}
+}
+
+func (parser *Parser) parseIfExpression() ast.Expression {
+    exp := &ast.IfExpression{Token: parser.currToken}
+
+    if !parser.expectPeek(token.LPAREN) {
+        fmt.Println("left paren not found for if statement")
+        return nil
+    }
+
+    parser.nextToken()
+    exp.Condition = parser.parseExpression(LOWEST)
+
+    if !parser.expectPeek(token.RPAREN) {
+        return nil
+    }
+
+    if !parser.expectPeek(token.LBRACE) {
+        return nil
+    }
+
+    exp.Consequence = parser.parseBlockStatement()
+
+    if parser.peekToken.Type == token.ELSE {
+        parser.nextToken()
+
+        if !parser.expectPeek(token.LBRACE) {
+            return nil
+        }
+
+        exp.Alternative = parser.parseBlockStatement()
+    }
+
+    return exp
+}
+
+func (parser *Parser) parseBlockStatement() *ast.BlockStatement {
+    block := &ast.BlockStatement{Token: parser.currToken}
+    block.Statements = []ast.Statement{}
+
+    parser.nextToken()
+
+    for parser.currToken.Type != token.RBRACE && parser.currToken.Type != token.EOF {
+        stmt := parser.parseStatement()
+
+        if stmt != nil {
+            block.Statements = append(block.Statements, stmt)
+        }
+        parser.nextToken()
+    }
+    return block
 }
 
 func (parser *Parser) expectPeek(expectedType token.TokenType) bool {
