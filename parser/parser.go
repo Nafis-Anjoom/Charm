@@ -33,6 +33,7 @@ var precedences = map[token.TokenType]int {
     token.MINUS: SUM,
     token.SLASH: PRODUCT,
     token.ASTERISK: PRODUCT,
+    token.LPAREN: CALL,
 }
 
 type Parser struct {
@@ -76,6 +77,7 @@ func New(lexer *lexer.Lexer) *Parser {
     parser.registerInfix(token.NOT_EQ, parser.parseInfixExpression)
     parser.registerInfix(token.LT, parser.parseInfixExpression)
     parser.registerInfix(token.GT, parser.parseInfixExpression)
+    parser.registerInfix(token.LPAREN, parser.parseCallExpression)
 
     return parser
 }
@@ -348,6 +350,7 @@ func (parser *Parser) parseFunctionLiteral() ast.Expression {
 
 
 func (parser *Parser) parseFunctionParameters() []*ast.Identifier {
+    // TODO: move this assertion to caller
     if !parser.expectPeek(token.LPAREN) {
         return nil
     }
@@ -380,6 +383,37 @@ func (parser *Parser) parseFunctionParameters() []*ast.Identifier {
     return parameters
 }
 
+func (parser *Parser) parseCallExpression(function ast.Expression) ast.Expression {
+    callExp := &ast.CallExpression{Token: parser.currToken, FunctionLiteral: function}
+    callExp.Arguments = parser.parseCallArguments()
+
+    return callExp
+}
+
+func (parser *Parser) parseCallArguments() []ast.Expression {
+    args := []ast.Expression{}
+
+    if parser.peekToken.Type == token.RPAREN {
+        parser.nextToken()
+        return args
+    }
+
+    parser.nextToken()
+    args = append(args, parser.parseExpression(LOWEST))
+
+    for parser.peekToken.Type == token.COMMA {
+        parser.nextToken()
+        parser.nextToken()
+        args = append(args, parser.parseExpression(LOWEST))
+    }
+
+    // TODO: return error instead of nil, then handle error in caller
+    if !parser.expectPeek(token.RPAREN) {
+        return nil
+    }
+    return args
+}
+
 func (parser *Parser) noPrefixFnError(token token.TokenType) {
     msg := fmt.Sprintf("no prefix parse function for %s found", token)
     parser.errors = append(parser.errors, msg)
@@ -398,6 +432,5 @@ func (parser *Parser) currPrecedence() int {
     if p, ok := precedences[parser.currToken.Type]; ok {
         return p
     }
-
     return LOWEST
 }

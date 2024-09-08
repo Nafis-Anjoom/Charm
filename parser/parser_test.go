@@ -1,10 +1,10 @@
 package parser
 
 import (
-    "charm/ast"
-    "charm/lexer"
-    "testing"
-    "fmt"
+	"charm/ast"
+	"charm/lexer"
+	"fmt"
+	"testing"
 )
 
 func TestLetStatements(t *testing.T) {
@@ -493,7 +493,7 @@ func TestIfElseExpression(t *testing.T) {
     }
 }
 
-func TestFunctionLiteral(t *testing.T) {
+func TestParseFunctionLiteral(t *testing.T) {
     input := `fn(x, y) {x + y;}`
 
     lexer := lexer.New(input)
@@ -544,7 +544,6 @@ func TestParseFunctionParameters(t *testing.T) {
         {input: "fn() {}", expected: []string{}},
         {input: "fn(x) {}", expected: []string{"x"}},
         {input: "fn(x, y, z) {}", expected: []string{"x", "y", "z"}},
-        {input: "fn(w, x, y, z) {}", expected: []string{"x", "y", "z"}},
     }
 
     for _, test := range tests {
@@ -575,6 +574,98 @@ func TestParseFunctionParameters(t *testing.T) {
         }
     }
 }
+
+func TestParseCallExpression(t *testing.T) {
+    input := "add(1, 2 * 3, 4 + 5);"
+
+    lexer := lexer.New(input)
+    parser := New(lexer)
+    program := parser.ParseProgram()
+
+    checkParserErrors(t, parser)
+
+    if len(program.Statements) != 1 {
+        t.Fatalf("length of statements not 1. Got %d\n", len(program.Statements))
+    }
+
+    stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+    if !ok {
+        t.Fatalf("program.statements[0] is not of type *ast.ExpressionStatement. Got=%T\n",
+            program.Statements[0])
+    }
+
+    callExp, ok := stmt.Expression.(*ast.CallExpression)
+    if !ok {
+        t.Fatalf("stmt.Expression is not of type *ast.CallExpression. Got=%T\n",
+            stmt.Expression)
+    }
+
+    if !testIdentifier(t, callExp.FunctionLiteral, "add") {
+        return
+    }
+
+    if len(callExp.Arguments) != 3 {
+        t.Fatalf("wrong length of arguments. got=%d", len(callExp.Arguments))
+    }
+
+    // input := "add(1, 2 * 3, 4 + 5);"
+    testIntegerLiteral(t, callExp.Arguments[0], 1)
+    testInfixExpression(t, callExp.Arguments[1], 2, "*", 3)
+    testInfixExpression(t, callExp.Arguments[2], 4, "+", 5)
+}
+
+// func TestParseCallArguments(t *testing.T) {
+//     tests := []struct {
+//         input string
+//         expected []ast.Expression
+//     } {
+//         {
+//             input: "add(1, 2 * 3, 4 + 5);",
+//             expected: []ast.Expression {
+//                 &ast.Identifier {
+//                     Token: token.Token{Type: token.INT, Literal: "1"},
+//                     Value: "1",
+//                 },
+//                 &ast.InfixExpression {
+//                     Token: token.Token{Type: token.ASTERISK, Literal: "*"},
+//                     Left: &ast.IntegerLiteral{
+//                         Token: token.Token{Type: token.INT, Literal: "2"},
+//                         Value: 2,
+//                     },
+//                     Operator: "*",
+//                     Right: &ast.IntegerLiteral{
+//                         Token: token.Token{Type: token.INT, Literal: "3"},
+//                         Value: 2,
+//                     },
+//                 },
+//                 &ast.InfixExpression {
+//                     Token: token.Token{Type: token.ASTERISK, Literal: "+"},
+//                     Left: &ast.IntegerLiteral{
+//                         Token: token.Token{Type: token.INT, Literal: "4"},
+//                         Value: 4,
+//                     },
+//                     Operator: "+",
+//                     Right: &ast.IntegerLiteral{
+//                         Token: token.Token{Type: token.INT, Literal: "5"},
+//                         Value: 5,
+//                     },
+//                 },
+//             },
+//         },
+//     }
+
+//     for _, test := range tests {
+//         lexer := lexer.New(test.input)
+//         parser := New(lexer)
+//         program := parser.ParseProgram()
+
+//         checkParserErrors(t, parser)
+
+//         if len(program.Statements) != 1 {
+//             t.Fatalf("expected 1 statement. Got=%d\n", program.Statements)
+//         }
+//     }
+// }
 
 // helper functions 
 func checkParserErrors(t *testing.T, p *Parser) {
@@ -699,10 +790,17 @@ func testInfixExpression(t *testing.T, exp ast.Expression, left any, operator st
         return false
     }
 
-
     if !testLiteralExpression(t, opExp.Right, right) {
         return false
     }
-
     return true
 }
+
+func stringToExpression(input string) ast.Expression {
+    lexer := lexer.New(input)
+    parser := New(lexer)
+    exp := parser.parseExpression(LOWEST)
+
+    return exp
+}
+
