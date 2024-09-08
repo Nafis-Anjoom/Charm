@@ -8,71 +8,79 @@ import (
 )
 
 func TestLetStatements(t *testing.T) {
-    input := `
-    let x = 5;
-    let y = 10;
-    let foobar = 838383;
-    `
-
-    lexer := lexer.New(input)
-    parser := New(lexer)
-    program := parser.ParseProgram()
-
-    checkParserErrors(t, parser)
-
-    if program == nil {
-        t.Fatal("ParseProgram returned nil\n")
-    }
-
-    if len(program.Statements) != 3 {
-        t.Fatalf("Expected 3 statements. Got %d\n", len(program.Statements))
-    }
-
     tests := []struct {
+        input string
         expectedIdentifier string
+        expectedValue any
     } {
-        {"x"},
-        {"y"},
-        {"foobar"},
+        {input: "let x = 5;", expectedIdentifier: "x", expectedValue: 5},
+        {input: "let y = 10;", expectedIdentifier: "y", expectedValue: 10},
+        {input: "let foobar = 838383;", expectedIdentifier: "foobar", expectedValue: 838383},
     }
 
-    for i, testCase := range tests {
-        stmt := program.Statements[i]
+    for _, test := range tests {
 
-        if !testLetStatement(t, stmt, testCase.expectedIdentifier) {
+        lexer := lexer.New(test.input)
+        parser := New(lexer)
+        program := parser.ParseProgram()
+
+        checkParserErrors(t, parser)
+
+        if program == nil {
+            t.Fatal("ParseProgram returned nil\n")
+        }
+
+        if len(program.Statements) != 1 {
+            t.Fatalf("Expected 1 statements. Got %d\n", len(program.Statements))
+        }
+
+        stmt := program.Statements[0]
+        if !testLetStatement(t, stmt, test.expectedIdentifier) {
             return 
+        }
+
+        val := stmt.(*ast.LetStatement).Value
+        if !testLiteralExpression(t, val, test.expectedValue) {
+            return
         }
     }
 }
 
 func TestReturnStatement(t *testing.T) {
-    input := `
-    return 5;
-    return 10;
-    return 923123;
-    `
-
-    lexer := lexer.New(input)
-    parser := New(lexer)
-    program := parser.ParseProgram()
-
-    checkParserErrors(t, parser)
-
-    if len(program.Statements) != 3 {
-        t.Fatalf("program.Statements does not contain 3 statements. got=%d\n", len(program.Statements))
+    tests := []struct {
+        input string
+        expectedReturnValue any
+    } {
+        
+        {input: "return 5;", expectedReturnValue: "5"},
+        {input: "return foobar;", expectedReturnValue: "foobar"},
+        {input: "return 10 + 10;", expectedReturnValue: "(10 + 10)"},
     }
 
-    for _, stmt := range program.Statements {
+    for _, test := range tests {
+        lexer := lexer.New(test.input)
+        parser := New(lexer)
+        program := parser.ParseProgram()
+
+        checkParserErrors(t, parser)
+
+        if len(program.Statements) != 1 {
+            t.Fatalf("program.Statements does not contain 1 statements. got=%d\n", len(program.Statements))
+        }
+
+        stmt := program.Statements[0]
         if stmt.TokenLiteral() != "return" {
             t.Errorf("stmt.TokenLiteral not 'return'. got=%q", stmt.TokenLiteral())
         }
 
-        // returnStmt, ok := stmt.(*ast.ReturnStatement)
-        _, ok := stmt.(*ast.ReturnStatement)
-
+        returnStmt, ok := stmt.(*ast.ReturnStatement)
         if !ok {
             t.Errorf("stmt not *ast.ReturnStatement. got=%T\n", stmt)
             continue
+        }
+
+        if returnStmt.ReturnValue.String() != test.expectedReturnValue {
+            t.Fatalf("Expected %s. Got=%s\n", test.expectedReturnValue, returnStmt.ReturnValue.String())
         }
     }
 }
@@ -384,6 +392,18 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
         {
             "!(true == true)",
             "(!(true == true))",
+        },
+        {
+            "a + add(b * c) + d",
+            "((a + add((b * c))) + d)",
+        },
+        {
+            "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
+            "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))",
+        },
+        {
+            "add(a + b + c * d / f + g)",
+            "add((((a + b) + ((c * d) / f)) + g))",
         },
     }
 
