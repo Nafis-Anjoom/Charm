@@ -3,9 +3,9 @@ package repl
 import (
 	"bufio"
 	"charm/lexer"
-	"fmt"
-	"io"
-    "charm/token"
+    "charm/parser"
+    "fmt"
+    "io"
 )
 
 const PROMPT = ">> "
@@ -23,9 +23,19 @@ func Start(in io.Reader, out io.Writer) {
 
         line := scanner.Text()
         lexer := lexer.New(line)
+        parser := parser.New(lexer)
+        program := parser.ParseProgram()
 
-        for tok := lexer.NextToken(); tok.Type != token.EOF; tok = lexer.NextToken() {
-            fmt.Printf("%+v\n", tok)
+        errors := parser.GetErrors()
+        if len(errors) != 0 {
+            io.WriteString(out, "Parser errors:\n")
+            for _, msg := range errors {
+                io.WriteString(out, "\t" + msg + "\n")
+            }
+            continue
         }
+
+        io.WriteString(out, program.String())
+        io.WriteString(out, "\n")
     }
 }
