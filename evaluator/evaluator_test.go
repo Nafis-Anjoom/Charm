@@ -37,6 +37,25 @@ func TestEvalBooleanExpression(t *testing.T) {
     }
 }
 
+func TestBangOperator(t *testing.T) {
+    tests := []struct {
+        input string
+        expected bool
+    } {
+        {"!true", false},
+        {"!false", true},
+        {"!5", false},
+        {"!!true", true},
+        {"!!false", false},
+        {"!!5", true},
+    }
+
+    for _, test := range tests {
+        evaluated := evalTest(test.input)
+        testBooleanObject(t, evaluated, test.expected)
+    }
+}
+
 // helpers
 func evalTest(input string) object.Object {
     lexer := lexer.New(input)
