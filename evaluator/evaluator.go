@@ -46,8 +46,9 @@ func evalPrefixExpression(exp *ast.PrefixExpression) object.Object {
     case "!":
         right := Eval(exp.Right)
         return evalBangExpression(right)
+    default:
+        return NULL
     }
-    return nil
 }
 
 // Integers are truthy. Nulls are falsy
