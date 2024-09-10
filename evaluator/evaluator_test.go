@@ -69,6 +69,50 @@ func TestEvalBooleanExpression(t *testing.T) {
     }
 }
 
+// TODO: refactor tests to run every sub-test in its own goroutine
+func TestIfElseExpressions(t *testing.T) {
+    tests := []struct {
+        input string
+        expected any
+    } {
+        {"if (true) { 10 }", 10},
+        {"if (false) { 10 }", nil},
+        {"if (1) { 10 }", 10},
+        {"if (1 < 2) { 10 }", 10},
+        {"if (1 > 2) { 10 }", nil},
+        {"if (1 > 2) { 10 } else { 20 }", 20},
+        {"if (1 < 2) { 10 } else { 20 }", 10},
+        {"if (1 < 2) { 10; 20; 30; } else { 20 }", 30},
+    }
+
+    for _, test := range tests {
+        evalulated := evalTest(test.input)
+        integer, ok := test.expected.(int)
+        if ok {
+            testIntegerObject(t, evalulated, int64(integer))
+        } else {
+            testNullObject(t, evalulated)
+        }
+    }
+}
+
+func TestReturnStatements(t *testing.T) {
+    tests := []struct {
+        input string
+        expected int64
+    } {
+        {"return 10;", 10},
+        {"return 10; 9;", 10},
+        {"return 2 * 5; 9;", 10},
+        {"9; return 2 * 5; 9;", 10},
+    }
+
+    for _, test := range tests {
+        evaluated := evalTest(test.input)
+        testIntegerObject(t, evaluated, test.expected)
+    }
+}
+
 // helpers
 func evalTest(input string) object.Object {
     lexer := lexer.New(input)
@@ -97,5 +141,11 @@ func testBooleanObject(t *testing.T, evaluated object.Object, expected bool) {
 
     if boolObj.Value != expected {
         t.Fatalf("object has wrong value. Expected %t, got %t\n", expected, boolObj.Value)
+    }
+}
+
+func testNullObject(t *testing.T, evaluated object.Object) {
+    if evaluated != NULL {
+        t.Fatalf("object is not NULL. got=%T (%+v)", evaluated, evaluated)
     }
 }
