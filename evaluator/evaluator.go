@@ -20,13 +20,11 @@ func Eval(node ast.Node) object.Object {
     case *ast.IntegerLiteral:
         return &object.Integer{Value: node.Value}
     case *ast.BooleanLiteral:
-        if node.Value {
-            return TRUE
-        }
-        return FALSE
+        return nativeBooltoBoolObject(node.Value)
     case *ast.PrefixExpression:
         return evalPrefixExpression(node)
-        
+    case *ast.InfixExpression:
+        return evalInfixExpression(node)
     }
     return nil
 }
@@ -76,4 +74,52 @@ func evalMinusPrefixExpression(right object.Object) object.Object {
     }
     value := right.(*object.Integer).Value
     return &object.Integer{Value: -value}
+}
+
+func evalInfixExpression(exp *ast.InfixExpression) object.Object {
+    right := Eval(exp.Right)
+    left := Eval(exp.Left)
+
+    switch {
+    case right.Type() == object.INTEGER_OBJ && left.Type() == object.INTEGER_OBJ:
+        rightValue := right.(*object.Integer).Value
+        leftValue := left.(*object.Integer).Value
+        return evalIntegerInfixExpression(leftValue, exp.Operator, rightValue)
+    case exp.Operator == "==":
+        return nativeBooltoBoolObject(left == right)
+    case exp.Operator == "!=":
+        return nativeBooltoBoolObject(left != right)
+    default:
+        return NULL
+    }
+}
+
+func evalIntegerInfixExpression(left int64, operator string, right int64) object.Object {
+    switch operator {
+    case "+":
+        return &object.Integer{Value: left + right}
+    case "-":
+        return &object.Integer{Value: left - right}
+    case "*":
+        return &object.Integer{Value: left * right}
+    case "/":
+        return &object.Integer{Value: left / right}
+    case "<":
+        return nativeBooltoBoolObject(left < right)
+    case ">":
+        return nativeBooltoBoolObject(left > right)
+    case "==":
+        return nativeBooltoBoolObject(left == right)
+    case "!=":
+        return nativeBooltoBoolObject(left != right)
+    default:
+        return NULL
+    }
+}
+
+func nativeBooltoBoolObject(boolean bool) *object.Boolean {
+    if boolean {
+        return TRUE
+    }
+    return FALSE
 }

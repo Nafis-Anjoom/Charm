@@ -86,7 +86,6 @@ func (parser *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn
     parser.prefixParseFns[tokenType] = fn
 }
 
-
 func (parser *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
     parser.infixParseFns[tokenType] = fn
 }
@@ -121,7 +120,6 @@ func (parser *Parser) ParseProgram() *ast.Program {
     }
     return &program
 }
-
 
 func (parser *Parser) parseStatement() ast.Statement {
     switch parser.currToken.Type {
@@ -351,7 +349,6 @@ func (parser *Parser) parseFunctionLiteral() ast.Expression {
     return function
 }
 
-
 func (parser *Parser) parseFunctionParameters() []*ast.Identifier {
     // TODO: move this assertion to caller
     if !parser.expectPeek(token.LPAREN) {
@@ -429,7 +426,6 @@ func (parser *Parser) peekPrecedence() int {
 
     return LOWEST
 }
-
 
 func (parser *Parser) currPrecedence() int {
     if p, ok := precedences[parser.currToken.Type]; ok {
