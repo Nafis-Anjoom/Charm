@@ -41,18 +41,22 @@ func evalStatements(stmts []ast.Statement) object.Object {
     return result
 }
 
+// DNOTE: return NULL when encountering unknown prefix operator 
 func evalPrefixExpression(exp *ast.PrefixExpression) object.Object {
     switch exp.Operator {
     case "!":
         right := Eval(exp.Right)
-        return evalBangExpression(right)
+        return evalBangPrefixExpression(right)
+    case "-":
+        right := Eval(exp.Right)
+        return evalMinusPrefixExpression(right)
     default:
         return NULL
     }
 }
 
-// Integers are truthy. Nulls are falsy
-func evalBangExpression(right object.Object) object.Object {
+// DNOTE: Integers are truthy. Nulls are falsy
+func evalBangPrefixExpression(right object.Object) object.Object {
     switch right {
     case TRUE:
         return FALSE
@@ -63,4 +67,13 @@ func evalBangExpression(right object.Object) object.Object {
     default:
         return FALSE
     }
+}
+
+// DNOTE: if right expression not integers, then return NULL
+func evalMinusPrefixExpression(right object.Object) object.Object {
+    if right.Type() != object.INTEGER_OBJ {
+        return NULL
+    }
+    value := right.(*object.Integer).Value
+    return &object.Integer{Value: -value}
 }

@@ -37,7 +37,7 @@ func TestEvalBooleanExpression(t *testing.T) {
     }
 }
 
-func TestBangOperator(t *testing.T) {
+func TestBangPrefixExpression(t *testing.T) {
     tests := []struct {
         input string
         expected bool
@@ -53,6 +53,23 @@ func TestBangOperator(t *testing.T) {
     for _, test := range tests {
         evaluated := evalTest(test.input)
         testBooleanObject(t, evaluated, test.expected)
+    }
+}
+
+func TestMinusPrefixExpression(t *testing.T) {
+    tests := []struct {
+        input string
+        expected int64
+    } {
+        {"5", 5},
+        {"10", 10},
+        {"-5", -5},
+        {"-10", -10},
+    }
+
+    for _, test := range tests {
+        evaluated := evalTest(test.input)
+        testIntegerObject(t, evaluated, test.expected)
     }
 }
 
