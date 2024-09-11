@@ -180,8 +180,9 @@ func evalTest(input string) object.Object {
     lexer := lexer.New(input)
     parser := parser.New(lexer)
     program := parser.ParseProgram()
+    environment := object.NewEnvironment()
 
-    return Eval(program)
+    return Eval(program, environment)
 }
 
 func testIntegerObject(t *testing.T, evaluated object.Object, expected int64) {
