@@ -1,5 +1,9 @@
 package object
 
+import (
+	"bytes"
+)
+
 type Environment struct {
     store map[string]Object
     outer *Environment
@@ -27,4 +31,32 @@ func (e *Environment) Get(key string) (Object, bool) {
 func (e *Environment) Set(key string, val Object) Object {
     e.store[key] = val
     return val
+}
+
+func (e *Environment) String() string {
+    var out bytes.Buffer
+
+    out.WriteString("store\n")
+    for key, val := range e.store {
+        out.WriteString("Key: ")
+        out.WriteString(key)
+        out.WriteString(",\t")
+        out.WriteString("Value: ")
+        out.WriteString(val.Inspect())
+        out.WriteString("\n")
+    }
+
+    if e.outer != nil {
+        out.WriteString("outer\n")
+        for key, val := range e.outer.store {
+            out.WriteString("Key: ")
+            out.WriteString(key)
+            out.WriteString(",\t")
+            out.WriteString("Value: ")
+            out.WriteString(val.Inspect())
+            out.WriteString("\n")
+        }
+    }
+
+    return out.String()
 }
