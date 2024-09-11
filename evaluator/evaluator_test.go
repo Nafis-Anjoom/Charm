@@ -175,6 +175,22 @@ func TestReturnStatements(t *testing.T) {
     }
 }
 
+func TestLetStatement(t *testing.T) {
+    tests := []struct {
+        input string
+        expected int64
+    } {
+        {"let a = 5; a;", 5},
+        {"let a = 5 * 5; a;", 25},
+        {"let a = 5; let b = a; b;", 5},
+        {"let a = 5; let b = a; let c = a + b + 5; c;", 15},
+    }
+
+    for _, test := range tests {
+        testIntegerObject(t, evalTest(test.input), test.expected)
+    }
+}
+
 // helpers
 func evalTest(input string) object.Object {
     lexer := lexer.New(input)
@@ -199,16 +215,16 @@ func testIntegerObject(t *testing.T, evaluated object.Object, expected int64) {
 func testBooleanObject(t *testing.T, evaluated object.Object, expected bool) {
     boolObj, ok := evaluated.(*object.Boolean)
     if !ok {
-        t.Fatalf("object is not an boolean. Got=%T (%+v)", evaluated, evaluated)
+        t.Errorf("object is not an boolean. Got=%T (%+v)", evaluated, evaluated)
     }
 
     if boolObj.Value != expected {
-        t.Fatalf("object has wrong value. Expected %t, got %t\n", expected, boolObj.Value)
+        t.Errorf("object has wrong value. Expected %t, got %t\n", expected, boolObj.Value)
     }
 }
 
 func testNullObject(t *testing.T, evaluated object.Object) {
     if evaluated != NULL {
-        t.Fatalf("object is not NULL. got=%T (%+v)", evaluated, evaluated)
+        t.Errorf("object is not NULL. got=%T (%+v)", evaluated, evaluated)
     }
 }

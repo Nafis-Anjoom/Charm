@@ -36,6 +36,19 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
             return returnValue
         }
         return &object.ReturnValue{Value: returnValue}
+    case *ast.LetStatement:
+        value := Eval(node.Value, env)
+        if isError(value) {
+            return value
+        }
+        env.Set(node.Identifier.Value, value)
+        return value
+    case *ast.Identifier:
+        val, found := env.Get(node.Value)
+        if !found {
+            return newError("identifier not found: %s", node.Value)
+        }
+        return val
     }
     return nil
 }
