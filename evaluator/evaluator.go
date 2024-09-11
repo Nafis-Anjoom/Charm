@@ -3,7 +3,7 @@ package evaluator
 import (
 	"charm/ast"
 	"charm/object"
-    "fmt"
+	"fmt"
 )
 
 var (
@@ -51,6 +51,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
         return val
     case *ast.FunctionLiteral:
         return &object.Function{Parameters: node.Parameters, Body: node.Body, Env: env}
+    case *ast.CallExpression:
+        return evalCallExpression(node, env)
     }
     return nil
 }
@@ -190,6 +192,35 @@ func evalIfExpression(node *ast.IfExpression, env *object.Environment) object.Ob
     }
 }
 
+func evalCallExpression(node *ast.CallExpression, env *object.Environment) object.Object {
+    obj := Eval(node.FunctionLiteral, env)
+    functionObj, ok := obj.(*object.Function)
+    if !ok {
+        return newError("not a function: %s", obj.Type())
+    }
+
+    arguments := evalExpressions(node.Arguments, env)
+    if len(arguments) == 0 && arguments[0].Type() == object.ERROR_OBJ {
+        return arguments[0]
+    }
+
+    if len(arguments) > len(functionObj.Parameters) {
+        return newError("too many arguments")
+    }
+    if len(arguments) < len(functionObj.Parameters) {
+        return newError("not enough arguments")
+    }
+
+    enclosedEnv := object.NewEnclosedEnvironment(env)
+
+    for i, param := range functionObj.Parameters {
+        enclosedEnv.Set(param.Value, arguments[i])
+    }
+
+    evaluated := Eval(functionObj.Body, enclosedEnv)
+    return unwrapReturnValue(evaluated)
+}
+
 func nativeBooltoBoolObject(boolean bool) *object.Boolean {
     if boolean {
         return TRUE
@@ -217,4 +248,23 @@ func isError(obj object.Object) bool {
         return obj.Type() == object.RETURN_VALUE_OBJ
     }
     return false
+}
+
+func evalExpressions(args []ast.Expression, env *object.Environment) []object.Object {
+    evaledArgs := []object.Object{}
+    for _, arg := range args {
+        evaluated := Eval(arg, env)
+        if isError(evaluated) {
+            return []object.Object{ evaluated }
+        }
+        evaledArgs = append(evaledArgs, evaluated)
+    }
+    return evaledArgs
+}
+
+func unwrapReturnValue(obj object.Object) object.Object {
+    if returnValue, ok := obj.(*object.ReturnValue); ok {
+        return returnValue.Value
+    }
+    return obj
 }
