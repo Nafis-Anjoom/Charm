@@ -211,7 +211,7 @@ func evalCallExpression(node *ast.CallExpression, env *object.Environment) objec
         return newError("not enough arguments")
     }
 
-    enclosedEnv := object.NewEnclosedEnvironment(env)
+    enclosedEnv := object.NewEnclosedEnvironment(functionObj.Env)
 
     for i, param := range functionObj.Parameters {
         enclosedEnv.Set(param.Value, arguments[i])
