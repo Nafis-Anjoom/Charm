@@ -69,6 +69,61 @@ func TestEvalBooleanExpression(t *testing.T) {
     }
 }
 
+func TestErrorHandling(t *testing.T) {
+    tests := []struct {
+        input string
+        expectedMessage string
+    } {
+        {
+            "5 + true;",
+            "type mismatch: INTEGER + BOOLEAN",
+        },
+        {
+            "5 + true; 5;",
+            "type mismatch: INTEGER + BOOLEAN",
+        },
+        {
+            "-true",
+            "unknown operator: -BOOLEAN",
+        },
+        {
+            "true + false;",
+            "unknown operator: BOOLEAN + BOOLEAN",
+        },
+        {
+            "5; true + false; 5",
+            "unknown operator: BOOLEAN + BOOLEAN",
+        },
+        {
+            "if (10 > 1) { true + false; }",
+            "unknown operator: BOOLEAN + BOOLEAN",
+        },
+        {
+            `if (10 > 1) {
+            if (10 > 1) {
+            return true + false;
+            }
+            return 1;
+            }`, "unknown operator: BOOLEAN + BOOLEAN",
+        },
+    }
+
+    for _, test := range tests {
+        evaluated := evalTest(test.input)
+
+        error, ok := evaluated.(*object.Error)
+        if !ok {
+            t.Errorf("No error returned. Expected message %s. Got %T(%+v)", test.expectedMessage, evaluated, evaluated)
+            continue
+        }
+
+        if error.Message != test.expectedMessage {
+            t.Errorf("wrong message received. Expected=%s. Got=%s", test.expectedMessage, error.Message)
+            continue
+        }
+    }
+}
+
 // TODO: refactor tests to run every sub-test in its own goroutine
 func TestIfElseExpressions(t *testing.T) {
     tests := []struct {
@@ -107,7 +162,7 @@ func TestReturnStatements(t *testing.T) {
         {"9; return 2 * 5; 9;", 10},
         {`if (10 > 1) {
             if (10 > 1) {
-            return 10;
+                return 10;
             }
             return 1;
             }`, 10,

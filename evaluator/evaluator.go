@@ -3,6 +3,7 @@ package evaluator
 import (
 	"charm/ast"
 	"charm/object"
+    "fmt"
 )
 
 var (
@@ -31,6 +32,9 @@ func Eval(node ast.Node) object.Object {
         return evalStatements(node.Statements)
     case *ast.ReturnStatement:
         returnValue := Eval(node.ReturnValue)
+        if isError(returnValue) {
+            return returnValue
+        }
         return &object.ReturnValue{Value: returnValue}
     }
     return nil
@@ -41,8 +45,11 @@ func evalProgram(program *ast.Program) object.Object {
 
     for _, stmt := range program.Statements {
         result = Eval(stmt)
-        if returnValue, ok := result.(*object.ReturnValue); ok {
-            return returnValue.Value
+        switch result := result.(type) {
+        case *object.ReturnValue:
+            return result.Value
+        case *object.Error:
+            return result
         }
     }
     return result
@@ -54,8 +61,10 @@ func evalStatements(stmts []ast.Statement) object.Object {
 
     for _, stmt := range stmts {
         result = Eval(stmt)
-        if result != nil && result.Type() == object.RETURN_VALUE_OBJ {
-            return result
+        if result != nil {
+            if  result.Type() == object.RETURN_VALUE_OBJ || result.Type() == object.ERROR_OBJ {
+                return result
+            }
         }
     }
 
@@ -64,15 +73,18 @@ func evalStatements(stmts []ast.Statement) object.Object {
 
 // DNOTE: return NULL when encountering unknown prefix operator 
 func evalPrefixExpression(exp *ast.PrefixExpression) object.Object {
+    right := Eval(exp.Right)
+    if isError(right) {
+        return right
+    }
+
     switch exp.Operator {
     case "!":
-        right := Eval(exp.Right)
         return evalBangPrefixExpression(right)
     case "-":
-        right := Eval(exp.Right)
         return evalMinusPrefixExpression(right)
     default:
-        return NULL
+        return newError("unknown operator: %s%s",exp.Operator, right.Type())
     }
 }
 
@@ -93,7 +105,7 @@ func evalBangPrefixExpression(right object.Object) object.Object {
 // DNOTE: if right expression not integers, then return NULL
 func evalMinusPrefixExpression(right object.Object) object.Object {
     if right.Type() != object.INTEGER_OBJ {
-        return NULL
+        return newError("unknown operator: -%s", right.Type())
     }
     value := right.(*object.Integer).Value
     return &object.Integer{Value: -value}
@@ -101,7 +113,13 @@ func evalMinusPrefixExpression(right object.Object) object.Object {
 
 func evalInfixExpression(exp *ast.InfixExpression) object.Object {
     right := Eval(exp.Right)
+    if isError(right) {
+        return right
+    }
     left := Eval(exp.Left)
+    if isError(left) {
+        return left
+    }
 
     switch {
     case right.Type() == object.INTEGER_OBJ && left.Type() == object.INTEGER_OBJ:
@@ -112,8 +130,10 @@ func evalInfixExpression(exp *ast.InfixExpression) object.Object {
         return nativeBooltoBoolObject(left == right)
     case exp.Operator == "!=":
         return nativeBooltoBoolObject(left != right)
+    case left.Type() != right.Type():
+        return newError("type mismatch: %s %s %s", left.Type(), exp.Operator, right.Type())
     default:
-        return NULL
+        return newError("unknown operator: %s %s %s", left.Type(), exp.Operator, right.Type())
     }
 }
 
@@ -142,6 +162,9 @@ func evalIntegerInfixExpression(left int64, operator string, right int64) object
 
 func evalIfExpression(node *ast.IfExpression) object.Object {
     condition := Eval(node.Condition)
+    if isError(condition) {
+        return condition
+    }
 
     if isTruthy(condition) {
         return Eval(node.Consequence)
@@ -168,4 +191,15 @@ func isTruthy(obj object.Object) bool {
     default:
         return true
     }
+}
+
+func newError(format string, arguments ...any) *object.Error {
+    return &object.Error{Message: fmt.Sprintf(format, arguments...)}
+}
+
+func isError(obj object.Object) bool {
+    if obj != nil {
+        return obj.Type() == object.RETURN_VALUE_OBJ
+    }
+    return false
 }
