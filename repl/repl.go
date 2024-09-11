@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"charm/evaluator"
 	"charm/lexer"
+	"charm/object"
 	"charm/parser"
 	"fmt"
 	"io"
@@ -13,6 +14,7 @@ const PROMPT = ">> "
 
 func Start(in io.Reader, out io.Writer) {
     scanner := bufio.NewScanner(in)
+    environment := object.NewEnvironment()
 
     for {
         fmt.Printf(PROMPT)
@@ -36,7 +38,7 @@ func Start(in io.Reader, out io.Writer) {
             continue
         }
 
-        evaluated := evaluator.Eval(program)
+        evaluated := evaluator.Eval(program, environment)
         if evaluated != nil {
             io.WriteString(out, evaluated.Inspect())
             io.WriteString(out,"\n")
