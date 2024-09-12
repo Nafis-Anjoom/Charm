@@ -145,6 +145,10 @@ func evalInfixExpression(exp *ast.InfixExpression, env *object.Environment) obje
         rightValue := right.(*object.Integer).Value
         leftValue := left.(*object.Integer).Value
         return evalIntegerInfixExpression(leftValue, exp.Operator, rightValue)
+    case right.Type() == object.STRING_OBJ && left.Type() == object.STRING_OBJ && exp.Operator == "+":
+        rightValue := right.(*object.String).Value
+        leftValue := left.(*object.String).Value
+        return &object.String{Value: leftValue + rightValue}
     case exp.Operator == "==":
         return nativeBooltoBoolObject(left == right)
     case exp.Operator == "!=":
