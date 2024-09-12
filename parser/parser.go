@@ -64,6 +64,7 @@ func New(lexer *lexer.Lexer) *Parser {
     parser.registerPrefix(token.MINUS, parser.parsePrefixExpression)
     parser.registerPrefix(token.TRUE, parser.parseBooleanLiteral)
     parser.registerPrefix(token.FALSE, parser.parseBooleanLiteral)
+    parser.registerPrefix(token.STRING, parser.parseStringLiteral)
     parser.registerPrefix(token.LPAREN, parser.parseGroupedExpression)
     parser.registerPrefix(token.IF, parser.parseIfExpression)
     parser.registerPrefix(token.FUNCTION, parser.parseFunctionLiteral)
@@ -120,6 +121,7 @@ func (parser *Parser) ParseProgram() *ast.Program {
     }
     return &program
 }
+
 
 func (parser *Parser) parseStatement() ast.Statement {
     switch parser.currToken.Type {
@@ -297,6 +299,10 @@ func (parser *Parser) parseBooleanLiteral() ast.Expression {
     return boolLit
 }
 
+func (parser *Parser) parseStringLiteral() ast.Expression {
+    return &ast.StringLiteral{Token: parser.currToken, Value: parser.currToken.Literal}
+}
+
 func (parser *Parser) parsePrefixExpression() ast.Expression {
     expression := &ast.PrefixExpression{
         Token: parser.currToken,
@@ -426,6 +432,7 @@ func (parser *Parser) peekPrecedence() int {
 
     return LOWEST
 }
+
 
 func (parser *Parser) currPrecedence() int {
     if p, ok := precedences[parser.currToken.Type]; ok {

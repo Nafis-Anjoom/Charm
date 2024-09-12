@@ -634,58 +634,24 @@ func TestParseCallExpression(t *testing.T) {
     testInfixExpression(t, callExp.Arguments[2], 4, "+", 5)
 }
 
-// func TestParseCallArguments(t *testing.T) {
-//     tests := []struct {
-//         input string
-//         expected []ast.Expression
-//     } {
-//         {
-//             input: "add(1, 2 * 3, 4 + 5);",
-//             expected: []ast.Expression {
-//                 &ast.Identifier {
-//                     Token: token.Token{Type: token.INT, Literal: "1"},
-//                     Value: "1",
-//                 },
-//                 &ast.InfixExpression {
-//                     Token: token.Token{Type: token.ASTERISK, Literal: "*"},
-//                     Left: &ast.IntegerLiteral{
-//                         Token: token.Token{Type: token.INT, Literal: "2"},
-//                         Value: 2,
-//                     },
-//                     Operator: "*",
-//                     Right: &ast.IntegerLiteral{
-//                         Token: token.Token{Type: token.INT, Literal: "3"},
-//                         Value: 2,
-//                     },
-//                 },
-//                 &ast.InfixExpression {
-//                     Token: token.Token{Type: token.ASTERISK, Literal: "+"},
-//                     Left: &ast.IntegerLiteral{
-//                         Token: token.Token{Type: token.INT, Literal: "4"},
-//                         Value: 4,
-//                     },
-//                     Operator: "+",
-//                     Right: &ast.IntegerLiteral{
-//                         Token: token.Token{Type: token.INT, Literal: "5"},
-//                         Value: 5,
-//                     },
-//                 },
-//             },
-//         },
-//     }
+func TestStringLiteralExpression(t *testing.T) {
+    input := `"hello world";`
+    lexer := lexer.New(input)
+    parser := New(lexer)
+    program := parser.ParseProgram()
 
-//     for _, test := range tests {
-//         lexer := lexer.New(test.input)
-//         parser := New(lexer)
-//         program := parser.ParseProgram()
+    checkParserErrors(t, parser)
 
-//         checkParserErrors(t, parser)
+    stmt := program.Statements[0].(*ast.ExpressionStatement)
+    literal, ok := stmt.Expression.(*ast.StringLiteral)
+    if !ok {
+        t.Fatalf("exp not *ast.StringLiteral. got=%T", stmt.Expression)
+    }
+    if literal.Value != "hello world" {
+        t.Errorf("literal.Value not %q. got=%q", "hello world", literal.Value)
+    }
+}
 
-//         if len(program.Statements) != 1 {
-//             t.Fatalf("expected 1 statement. Got=%d\n", program.Statements)
-//         }
-//     }
-// }
 
 // helper functions 
 func checkParserErrors(t *testing.T, p *Parser) {
