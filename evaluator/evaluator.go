@@ -46,11 +46,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
         env.Set(node.Identifier.Value, value)
         return value
     case *ast.Identifier:
-        val, found := env.Get(node.Value)
-        if !found {
-            return newError("identifier not found: %s", node.Value)
-        }
-        return val
+        return evalIdentifier(node, env)
     case *ast.FunctionLiteral:
         return &object.Function{Parameters: node.Parameters, Body: node.Body, Env: env}
     case *ast.CallExpression:
@@ -73,7 +69,6 @@ func evalProgram(program *ast.Program, env *object.Environment) object.Object {
     }
     return result
 }
-
 
 func evalStatements(stmts []ast.Statement, env *object.Environment) object.Object {
     var result object.Object
@@ -199,32 +194,48 @@ func evalIfExpression(node *ast.IfExpression, env *object.Environment) object.Ob
 }
 
 func evalCallExpression(node *ast.CallExpression, env *object.Environment) object.Object {
+    arguments := evalExpressions(node.Arguments, env)
     obj := Eval(node.FunctionLiteral, env)
-    functionObj, ok := obj.(*object.Function)
-    if !ok {
+
+    switch functionObj := obj.(type) {
+    case *object.Function:
+        if len(arguments) == 0 && arguments[0].Type() == object.ERROR_OBJ {
+            return arguments[0]
+        }
+
+        if len(arguments) > len(functionObj.Parameters) {
+            return newError("too many arguments")
+        }
+        if len(arguments) < len(functionObj.Parameters) {
+            return newError("not enough arguments")
+        }
+
+        enclosedEnv := object.NewEnclosedEnvironment(functionObj.Env)
+
+        for i, param := range functionObj.Parameters {
+            enclosedEnv.Set(param.Value, arguments[i])
+        }
+
+        evaluated := Eval(functionObj.Body, enclosedEnv)
+        return unwrapReturnValue(evaluated)
+    case *object.Builtin:
+        return functionObj.Fn(arguments...)
+    default:
         return newError("not a function: %s", obj.Type())
     }
 
-    arguments := evalExpressions(node.Arguments, env)
-    if len(arguments) == 0 && arguments[0].Type() == object.ERROR_OBJ {
-        return arguments[0]
+}
+
+func evalIdentifier(Identifier *ast.Identifier, env *object.Environment) object.Object {
+    if val, ok := env.Get(Identifier.Value); ok {
+        return val
     }
 
-    if len(arguments) > len(functionObj.Parameters) {
-        return newError("too many arguments")
-    }
-    if len(arguments) < len(functionObj.Parameters) {
-        return newError("not enough arguments")
+    if builtin, ok := builtins[Identifier.Value]; ok {
+        return builtin
     }
 
-    enclosedEnv := object.NewEnclosedEnvironment(functionObj.Env)
-
-    for i, param := range functionObj.Parameters {
-        enclosedEnv.Set(param.Value, arguments[i])
-    }
-
-    evaluated := Eval(functionObj.Body, enclosedEnv)
-    return unwrapReturnValue(evaluated)
+    return newError("identifier not found: %s", Identifier.Value)
 }
 
 func nativeBooltoBoolObject(boolean bool) *object.Boolean {
