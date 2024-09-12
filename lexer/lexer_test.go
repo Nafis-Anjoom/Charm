@@ -7,23 +7,25 @@ import (
 
 func TestNextToken(t *testing.T) {
     input := `let five = 5;
-        let ten = 10;
-        let add = fn(x, y) {
-        x + y;
-        };
-        let result = add(five, ten);
-        !-/*5;
-        5 < 10 > 5;
-        if (5 < 10) {
-            return true;
-        } else {
-            return false;
-        }
-        10 == 10;
-        10 != 9;
+    let ten = 10;
+    let add = fn(x, y) {
+    x + y;
+    };
+    let result = add(five, ten);
+    !-/*5;
+    5 < 10 > 5;
+    if (5 < 10) {
+    return true;
+    } else {
+    return false;
+    }
+    10 == 10;
+    10 != 9;
 
-        1 <= 10;
-        10 >= 0;
+    1 <= 10;
+    10 >= 0;
+    "hello"
+    "hello, world!@#"
     `   
     tests := []struct {
         expectedType token.TokenType
@@ -110,6 +112,8 @@ func TestNextToken(t *testing.T) {
 		{token.GT_EQ, ">="},
 		{token.INT, "0"},
 		{token.SEMICOLON, ";"},
+		{token.STRING, "hello"},
+		{token.STRING, "hello, world!@#"},
 		{token.EOF, ""},
     }
 
@@ -119,11 +123,11 @@ func TestNextToken(t *testing.T) {
         token := lexer.NextToken()
 
         if token.Type != testCase.expectedType {
-            t.Errorf("tests[%d] - tokentype wrong. expected=%q, got=%q", i, testCase.expectedType, token.Type)
+            t.Fatalf("tests[%d] - tokentype wrong. expected=%q, got=%q", i, testCase.expectedType, token.Type)
         }
 
         if token.Literal != testCase.expectedLiteral {
-            t.Errorf("tests[%d] - literal wrong. expected=%q, got=%q", i, testCase.expectedLiteral, token.Literal)
+            t.Fatalf("tests[%d] - literal wrong. expected=%q, got=%q", i, testCase.expectedLiteral, token.Literal)
         }
 
     }

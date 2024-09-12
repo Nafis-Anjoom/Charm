@@ -94,6 +94,11 @@ func (lexer *Lexer) NextToken() token.Token {
             } else {
                 tok = newToken(token.GT, lexer.ch)
             }
+        case '"':
+            stringLiteral := lexer.readString()
+            tok = token.Token{Type: token.STRING, Literal: stringLiteral }
+            lexer.readChar()
+            return tok
         case 0:
             tok.Literal = ""
             tok.Type = token.EOF
@@ -138,6 +143,17 @@ func (lexer *Lexer) readIdentifier() string {
     }
 
     return string(lexer.input[position: lexer.position])
+}
+
+// Challenge: add support for escape characters such as \t \n
+func (lexer *Lexer) readString() string {
+    lexer.readChar()
+    startPosition := lexer.position
+
+    for  lexer.ch != 0 && lexer.ch != '"' {
+        lexer.readChar()
+    }
+    return string(lexer.input[startPosition: lexer.position])
 }
 
 // TODO: support floats
