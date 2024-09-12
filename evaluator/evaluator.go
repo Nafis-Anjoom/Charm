@@ -53,6 +53,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
         return evalCallExpression(node, env)
     case *ast.ArrayLiteral:
         return evalArrayLiteral(node, env)
+    case *ast.IndexExpression:
+        return evalIndexExpression(node, env)
     }
     return nil
 }
@@ -238,6 +240,26 @@ func evalIdentifier(Identifier *ast.Identifier, env *object.Environment) object.
     }
 
     return newError("identifier not found: %s", Identifier.Value)
+}
+
+func evalIndexExpression(indexExpr *ast.IndexExpression, env *object.Environment) object.Object {
+    obj := Eval(indexExpr.Left, env)
+    array, ok := obj.(*object.Array)
+    if !ok {
+        return newError("index operator not supported: %s", obj.Type())
+    }
+
+    indexObj := Eval(indexExpr.Index, env)
+    index, ok := indexObj.(*object.Integer)
+    if !ok {
+        return newError("not an integer: %T", index)
+    }
+
+    if int(index.Value) >= len(array.Elements) || index.Value < 0 {
+        return NULL
+    }
+
+    return array.Elements[index.Value]
 }
 
 func nativeBooltoBoolObject(boolean bool) *object.Boolean {
