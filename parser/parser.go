@@ -401,7 +401,7 @@ func (parser *Parser) parseCallExpression(function ast.Expression) ast.Expressio
 func (parser *Parser) parseArrayLiteral() ast.Expression {
     elements := []ast.Expression{}
 
-    if parser.peekToken.Type == token.LBRACKET {
+    if parser.peekToken.Type == token.RBRACKET {
         parser.nextToken()
          return &ast.ArrayLiteral{Elements: elements}
     }
@@ -455,7 +455,6 @@ func (parser *Parser) parseIndexExpression(left ast.Expression) ast.Expression {
     }
 
     parser.nextToken()
-
     index := parser.parseExpression(LOWEST)
 
     if !parser.expectPeek(token.RBRACKET) {
