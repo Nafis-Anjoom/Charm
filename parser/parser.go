@@ -122,7 +122,6 @@ func (parser *Parser) ParseProgram() *ast.Program {
     return &program
 }
 
-
 func (parser *Parser) parseStatement() ast.Statement {
     switch parser.currToken.Type {
         case token.LET:
