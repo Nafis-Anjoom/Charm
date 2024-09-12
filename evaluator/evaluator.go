@@ -51,6 +51,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
         return &object.Function{Parameters: node.Parameters, Body: node.Body, Env: env}
     case *ast.CallExpression:
         return evalCallExpression(node, env)
+    case *ast.ArrayLiteral:
+        return evalArrayLiteral(node, env)
     }
     return nil
 }
@@ -277,6 +279,22 @@ func evalExpressions(args []ast.Expression, env *object.Environment) []object.Ob
         evaledArgs = append(evaledArgs, evaluated)
     }
     return evaledArgs
+}
+
+func evalArrayLiteral(node *ast.ArrayLiteral, env *object.Environment) object.Object {
+    elements := []object.Object{}
+    var evaluated object.Object
+
+    for _, exp := range node.Elements {
+        evaluated = Eval(exp, env)
+        if evaluated != nil && evaluated.Type() == object.ERROR_OBJ {
+            return evaluated
+        }
+
+        elements = append(elements, evaluated)
+    }
+
+    return &object.Array{Elements: elements}
 }
 
 func unwrapReturnValue(obj object.Object) object.Object {
