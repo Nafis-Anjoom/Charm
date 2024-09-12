@@ -26,6 +26,7 @@ func TestNextToken(t *testing.T) {
     10 >= 0;
     "hello"
     "hello, world!@#"
+    gg[0]
     `   
     tests := []struct {
         expectedType token.TokenType
@@ -114,6 +115,10 @@ func TestNextToken(t *testing.T) {
 		{token.SEMICOLON, ";"},
 		{token.STRING, "hello"},
 		{token.STRING, "hello, world!@#"},
+		{token.IDENT, "gg"},
+		{token.LBRACKET, "["},
+		{token.INT, "0"},
+		{token.RBRACKET, "]"},
 		{token.EOF, ""},
     }
 

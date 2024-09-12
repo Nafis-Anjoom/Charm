@@ -40,6 +40,8 @@ const (
 	RPAREN = ")"
 	LBRACE = "{"
 	RBRACE = "}"
+    LBRACKET = "["
+    RBRACKET = "]"
 
 	// Keywords
 	FUNCTION = "FUNCTION"
@@ -64,7 +66,6 @@ var keywords = map[string]TokenType {
 }
 
 func LookupIdentifier(identifier string) TokenType {
-    // fmt.Println("looking up ", identifier)
     if tokenType, found := keywords[identifier]; found {
         return tokenType
     }

@@ -68,6 +68,7 @@ func New(lexer *lexer.Lexer) *Parser {
     parser.registerPrefix(token.LPAREN, parser.parseGroupedExpression)
     parser.registerPrefix(token.IF, parser.parseIfExpression)
     parser.registerPrefix(token.FUNCTION, parser.parseFunctionLiteral)
+    parser.registerPrefix(token.LBRACKET, parser.parseArrayLiteral)
 
     parser.infixParseFns = make(map[token.TokenType]infixParseFn)
     parser.registerInfix(token.PLUS, parser.parseInfixExpression)
@@ -343,6 +344,10 @@ func (parser *Parser) parseGroupedExpression() ast.Expression {
 func (parser *Parser) parseFunctionLiteral() ast.Expression {
     function := &ast.FunctionLiteral{Token: parser.currToken}
 
+    if !parser.expectPeek(token.LPAREN) {
+        return nil
+    }
+
     function.Parameters = parser.parseFunctionParameters()
 
     if !parser.expectPeek(token.LBRACE) {
@@ -355,11 +360,6 @@ func (parser *Parser) parseFunctionLiteral() ast.Expression {
 }
 
 func (parser *Parser) parseFunctionParameters() []*ast.Identifier {
-    // TODO: move this assertion to caller
-    if !parser.expectPeek(token.LPAREN) {
-        return nil
-    }
-
     parameters := []*ast.Identifier{}
 
     if parser.peekToken.Type == token.RPAREN {
@@ -393,6 +393,33 @@ func (parser *Parser) parseCallExpression(function ast.Expression) ast.Expressio
     callExp.Arguments = parser.parseCallArguments()
 
     return callExp
+}
+
+func (parser *Parser) parseArrayLiteral() ast.Expression {
+    elements := []ast.Expression{}
+
+    if parser.peekToken.Type == token.LBRACKET {
+        parser.nextToken()
+         return &ast.ArrayLiteral{Elements: elements}
+    }
+
+    parser.nextToken()
+    var expr ast.Expression
+    expr = parser.parseExpression(LOWEST)
+    elements = append(elements, expr)
+
+    for parser.peekToken.Type == token.COMMA {
+        parser.nextToken()
+        parser.nextToken()
+        expr = parser.parseExpression(LOWEST)
+        elements = append(elements, expr)
+    }
+
+    if !parser.expectPeek(token.RBRACKET) {
+        return nil
+    }
+
+    return &ast.ArrayLiteral{Elements: elements}
 }
 
 func (parser *Parser) parseCallArguments() []ast.Expression {
