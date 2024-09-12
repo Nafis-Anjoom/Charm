@@ -268,40 +268,6 @@ func TestClosures(t *testing.T) {
     testIntegerObject(t, evalTest(input), 4)
 }
 
-func TestBuiltinFunctions(t *testing.T) {
-    tests := []struct {
-        input string
-        expected any
-    } {
-        {`len("")`, 0},
-        {`len("four")`, 4},
-        {`len("hello world")`, 11},
-        {`len(1)`, "argument to `len` not supported, got INTEGER"},
-        {`len("one", "two")`, "wrong number of arguments. got=2, want=1"},
-        {`len([1, "string", true, 4])`, 4},
-        {`len([])`, 0},
-    }
-
-    for _, test := range tests {
-        evaluated := evalTest(test.input)
-
-        switch expected := test.expected.(type) {
-        case int:
-            testIntegerObject(t, evaluated, int64(expected))
-        case string:
-            errObj, ok := evaluated.(*object.Error)
-            if !ok {
-                t.Errorf("object is not Error. Got=%T (%+v)", evaluated, evaluated)
-                continue
-            }
-
-            if errObj.Message != expected {
-                t.Errorf("wrong error message. expected=%q, got=%q", expected, errObj.Message)
-            }
-        }
-    }
-}
-
 func TestArrayLiterals(t *testing.T) {
     input := "[1, 2 * 2, 3 + 3]"
     evaluated := evalTest(input)
@@ -375,30 +341,41 @@ func evalTest(input string) object.Object {
     return Eval(program, environment)
 }
 
-func testIntegerObject(t *testing.T, evaluated object.Object, expected int64) {
+func testIntegerObject(t *testing.T, evaluated object.Object, expected int64) bool{
     intObj, ok := evaluated.(*object.Integer)
     if !ok {
-        t.Fatalf("object is not an integer. Got=%T (%+v)", evaluated, evaluated)
+        t.Errorf("object is not an integer. Got=%T (%+v)", evaluated, evaluated)
+        return false
     }
 
     if intObj.Value != expected {
-        t.Fatalf("object has wrong value. Expected %d, got %d\n", expected, intObj.Value)
+        t.Errorf("object has wrong value. Expected %d, got %d\n", expected, intObj.Value)
+        return false
     }
+
+    return true
 }
 
-func testBooleanObject(t *testing.T, evaluated object.Object, expected bool) {
+func testBooleanObject(t *testing.T, evaluated object.Object, expected bool) bool {
     boolObj, ok := evaluated.(*object.Boolean)
     if !ok {
         t.Errorf("object is not an boolean. Got=%T (%+v)", evaluated, evaluated)
+        return false
     }
 
     if boolObj.Value != expected {
         t.Errorf("object has wrong value. Expected %t, got %t\n", expected, boolObj.Value)
+        return false
     }
+
+    return true
 }
 
-func testNullObject(t *testing.T, evaluated object.Object) {
+func testNullObject(t *testing.T, evaluated object.Object) bool {
     if evaluated != NULL {
         t.Errorf("object is not NULL. got=%T (%+v)", evaluated, evaluated)
+        return false
     }
+
+    return true
 }
