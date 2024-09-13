@@ -705,6 +705,51 @@ func TestArrayLiteral(t *testing.T) {
     testInfixExpression(t, array.Elements[2], 3, "+", 3)
 }
 
+func TestParsingHashMapLiteralsStringKeys(t *testing.T) {
+    input := `{"one": 1, "two": 2, "three": 3}`
+
+    l := lexer.New(input)
+    p := New(l)
+    program := p.ParseProgram()
+
+    checkParserErrors(t, p)
+
+    stmt := program.Statements[0].(*ast.ExpressionStatement)
+    hash, ok := stmt.Expression.(*ast.HashMapLiteral)
+    if !ok {
+        t.Fatalf("exp is not ast.HashLiteral. got=%T", stmt.Expression)
+    }
+    if len(hash.Map) != 3 {
+        t.Errorf("hash.Map has wrong length. got=%d", len(hash.Map))
+    }
+
+    expected := map[string]int64{
+        "one": 1,
+        "two": 2,
+        "three": 3,
+    }
+    for key, value := range hash.Map {
+        literal, ok := key.(*ast.StringLiteral)
+        if !ok {
+            t.Errorf("key is not ast.StringLiteral. got=%T", key)
+        }
+        expectedValue := expected[literal.String()]
+        testIntegerLiteral(t, value, expectedValue)
+    }
+}
+
+func TestParsingHashMapLiteralsStringKeysInvalid(t *testing.T) {
+    input := `{"one": 1, "two": 2, "three": }`
+
+    lexer := lexer.New(input)
+    parser := New(lexer)
+    program := parser.ParseProgram()
+
+    if len(parser.errors) == 0 {
+        t.Fatalf("Expected Error. Got=%T", program.Statements[0])
+    }
+}
+
 // helper functions 
 func checkParserErrors(t *testing.T, p *Parser) {
     errors := p.GetErrors()

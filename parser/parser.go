@@ -67,10 +67,11 @@ func New(lexer *lexer.Lexer) *Parser {
     parser.registerPrefix(token.TRUE, parser.parseBooleanLiteral)
     parser.registerPrefix(token.FALSE, parser.parseBooleanLiteral)
     parser.registerPrefix(token.STRING, parser.parseStringLiteral)
-    parser.registerPrefix(token.LPAREN, parser.parseGroupedExpression)
     parser.registerPrefix(token.IF, parser.parseIfExpression)
     parser.registerPrefix(token.FUNCTION, parser.parseFunctionLiteral)
     parser.registerPrefix(token.LBRACKET, parser.parseArrayLiteral)
+    parser.registerPrefix(token.LBRACE, parser.parseHashMapLiteral)
+    parser.registerPrefix(token.LPAREN, parser.parseGroupedExpression)
 
     parser.infixParseFns = make(map[token.TokenType]infixParseFn)
     parser.registerInfix(token.PLUS, parser.parseInfixExpression)
@@ -448,6 +449,7 @@ func (parser *Parser) parseCallArguments() []ast.Expression {
     }
     return args
 }
+
 func (parser *Parser) parseIndexExpression(left ast.Expression) ast.Expression {
     indexExpr := &ast.IndexExpression{
         Token: parser.currToken,
@@ -465,6 +467,41 @@ func (parser *Parser) parseIndexExpression(left ast.Expression) ast.Expression {
     return indexExpr
 }
 
+// TODO: Better error reporting for incorrect grammar of hashmaps
+func (parser *Parser) parseHashMapLiteral() ast.Expression {
+    hashMap := &ast.HashMapLiteral{
+        Token: parser.currToken,
+        Map: make(map[ast.Expression]ast.Expression),
+    }
+
+    for parser.peekToken.Type != token.RBRACE {
+        parser.nextToken()
+        keyExpr := parser.parseExpression(LOWEST)
+
+        if !parser.expectPeek(token.COLON) {
+            return nil
+        }
+
+        parser.nextToken()
+        valueExpr := parser.parseExpression(LOWEST)
+        if valueExpr == nil {
+            return nil
+        }
+
+        hashMap.Map[keyExpr] = valueExpr
+        
+        if parser.peekToken.Type != token.RBRACE && !parser.expectPeek(token.COMMA) {
+            return nil
+        }
+    }
+
+    if !parser.expectPeek(token.RBRACE) {
+        return nil
+    }
+
+    return hashMap
+}
+
 func (parser *Parser) noPrefixFnError(token token.TokenType) {
     msg := fmt.Sprintf("no prefix parse function for %s found", token)
     parser.errors = append(parser.errors, msg)
@@ -477,7 +514,6 @@ func (parser *Parser) peekPrecedence() int {
 
     return LOWEST
 }
-
 
 func (parser *Parser) currPrecedence() int {
     if p, ok := precedences[parser.currToken.Type]; ok {

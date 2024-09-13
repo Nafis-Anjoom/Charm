@@ -77,6 +77,8 @@ func (lexer *Lexer) NextToken() token.Token {
             tok = newToken(token.SLASH, lexer.ch)
         case '*':
             tok = newToken(token.ASTERISK, lexer.ch)
+        case ':':
+            tok = newToken(token.COLON, lexer.ch)
         case '!':
             if lexer.peekChar() == '=' {
                 lexer.readChar()
