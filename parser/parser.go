@@ -507,6 +507,7 @@ func (parser *Parser) noPrefixFnError(token token.TokenType) {
     parser.errors = append(parser.errors, msg)
 }
 
+// if token does not have a precedence, return LOWEST
 func (parser *Parser) peekPrecedence() int {
     if p, ok := precedences[parser.peekToken.Type]; ok {
         return p

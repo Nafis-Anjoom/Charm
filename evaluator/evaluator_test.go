@@ -331,6 +331,109 @@ func TestArrayIndexExpressions(t *testing.T) {
     }
 }
 
+func TestHashableObjects(t *testing.T) {
+    tests := []struct {
+        left object.Hashable
+        right object.Hashable
+        shouldMatch bool
+    } {
+        {&object.String{Value: "Hello"}, &object.String{Value: "Hello"}, true},
+        {&object.String{Value: "Hello"}, &object.String{Value: "World"}, false},
+        {&object.Integer{Value: 1234}, &object.Integer{Value: 1234}, true},
+        {&object.Integer{Value: 1234}, &object.Integer{Value: 43321}, false},
+        {&object.Boolean{Value: true}, &object.Boolean{Value: false}, false},
+        {&object.Boolean{Value: true}, &object.Boolean{Value: true}, true},
+    }
+
+    for _, test := range tests {
+        leftHashCode := test.left.HashCode()
+        rightHashCode := test.right.HashCode()
+
+        if test.shouldMatch {
+            if leftHashCode != rightHashCode {
+                t.Errorf("Hashcodes do not match. left=%s, right=%s", test.left, test.right)
+            }
+        } else {
+            if leftHashCode == rightHashCode {
+                t.Errorf("Hashcodes match. left=%s, right=%s", test.left, test.right)
+            }
+        }
+    }
+}
+
+func TestHashMapLiteral(t *testing.T) {
+    input := `let two = "two";
+    {
+    "one": 10 - 9,
+    two: 1 + 1,
+    "thr" + "ee": 6 / 2,
+    4: 4,
+    true: 5,
+    false: 6
+    }`
+
+    evaluated := evalTest(input)
+    hashMapObj, ok := evaluated.(*object.HashMap)
+    if !ok {
+        t.Fatalf("object not hashMap. Got=%s", evaluated.Type())
+    }
+
+    one:= (&object.String{Value: "one"})
+    two:= (&object.String{Value: "two"})
+    three:= (&object.String{Value: "three"})
+    four:= (&object.Integer{Value: 4})
+    five:= (&object.Boolean{Value: true})
+    six:= (&object.Boolean{Value: false})
+
+    type expectedPair struct {
+        expectedObject object.Hashable
+        expectedValue int64
+    }
+
+    expected := map[uint64]expectedPair {
+        one.HashCode() : {one, 1},
+        two.HashCode() : {two, 2},
+        three.HashCode() : {three, 3},
+        four.HashCode() : {four, 4},
+        five.HashCode() : {five, 5},
+        six.HashCode() : {six, 6},
+    }
+
+    if len(expected) != len(hashMapObj.Map) {
+        t.Fatalf("length does not match. Expected=%d, Got=%d", len(expected), len(hashMapObj.Map))
+    }
+
+    for _, expectedPair := range expected {
+        actualPair := hashMapObj.Map[expectedPair.expectedObject.HashCode()]
+
+        // testing keys
+        switch expectedObj := expectedPair.expectedObject.(type) {
+        case *object.String:
+            if !testStringObject(t, actualPair.Key, expectedObj.Value) {
+                continue
+            }
+        case *object.Boolean:
+            if !testBooleanObject(t, actualPair.Key, expectedObj.Value) {
+                continue
+            }
+        case *object.Integer:
+            if !testIntegerObject(t, actualPair.Key, expectedObj.Value) {
+                continue
+            }
+        default:
+            t.Errorf("unexpected val for key: map[%s]: %s. Expected: map[%s]: %d",
+                actualPair.Key.Inspect(), actualPair.Value.Type(), 
+                expectedPair.expectedObject.Inspect(), expectedPair.expectedValue)
+            continue
+        }
+
+        // testing values
+        if !testIntegerObject(t, actualPair.Value, expectedPair.expectedValue) {
+            continue
+        }
+    }
+}
+
 // helpers
 func evalTest(input string) object.Object {
     lexer := lexer.New(input)
@@ -350,6 +453,21 @@ func testIntegerObject(t *testing.T, evaluated object.Object, expected int64) bo
 
     if intObj.Value != expected {
         t.Errorf("object has wrong value. Expected %d, got %d\n", expected, intObj.Value)
+        return false
+    }
+
+    return true
+}
+
+func testStringObject(t *testing.T, evaluated object.Object, expected string) bool {
+    strObj, ok := evaluated.(*object.String)
+    if !ok {
+        t.Errorf("object is not String. got=%T (%+v)", evaluated, evaluated)
+        return false
+    }
+
+    if strObj.Value != expected {
+        t.Errorf("String has wrong value. Expected=%q got=%q", expected, strObj.Value)
         return false
     }
 

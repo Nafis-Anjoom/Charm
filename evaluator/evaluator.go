@@ -55,6 +55,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
         return evalArrayLiteral(node, env)
     case *ast.IndexExpression:
         return evalIndexExpression(node, env)
+    case *ast.HashMapLiteral:
+        return evalHashMapLiteral(node, env)
     }
     return nil
 }
@@ -260,6 +262,33 @@ func evalIndexExpression(indexExpr *ast.IndexExpression, env *object.Environment
     }
 
     return array.Elements[index.Value]
+}
+
+func evalHashMapLiteral(hashMap *ast.HashMapLiteral, env *object.Environment) object.Object {
+    hashMapObj := &object.HashMap{
+        Map : make(map[uint64]object.Pair),
+    }
+
+    for key, val := range hashMap.Map {
+        keyObj := Eval(key, env)
+        if isError(keyObj) {
+            return keyObj
+        }
+        
+        hashableKey, ok := keyObj.(object.Hashable)
+        if !ok {
+            return newError("Object not hashable: %s", keyObj.Type())
+        }
+
+        valObj := Eval(val, env)
+        if isError(valObj) {
+            return valObj
+        }
+
+        hashMapObj.Map[hashableKey.HashCode()] = object.Pair{Key: keyObj, Value: valObj}
+    }
+
+    return hashMapObj
 }
 
 func nativeBooltoBoolObject(boolean bool) *object.Boolean {
