@@ -129,6 +129,10 @@ func TestErrorHandling(t *testing.T) {
             return 1;
             }`, "unknown operator: BOOLEAN + BOOLEAN",
         },
+        {
+            `{"name": "Monkey"}[fn(x) { x }];`,
+            "unusable as hash key: FUNCTION",
+        }
     }
 
     for _, test := range tests {
@@ -147,7 +151,6 @@ func TestErrorHandling(t *testing.T) {
     }
 }
 
-// TODO: refactor tests to run every sub-test in its own goroutine
 func TestIfElseExpressions(t *testing.T) {
     tests := []struct {
         input string
