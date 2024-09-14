@@ -26,10 +26,29 @@ func main() {
         lexer := lexer.New(string(file))
         parser := parser.New(lexer)
         program := parser.ParseProgram()
+
+        if !checkParserErrors(parser) {
+            return
+        }
+
         env := object.NewEnvironment()
 
         evaluator.Eval(program, env)
     } else {
         fmt.Println("incorrect number of arguments")
     }
+}
+
+func checkParserErrors(parser *parser.Parser) bool {
+    errors := parser.GetErrors()
+    if len(errors) == 0 {
+        return true
+    }
+
+    fmt.Printf("parser has %d errors\n", len(errors))
+    for _, msg := range errors {
+        fmt.Printf("parser error: %q\n", msg)
+    }
+
+    return false
 }
