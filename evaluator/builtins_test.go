@@ -1,8 +1,8 @@
 package evaluator
 
 import (
-	"charm/object"
 	"charm/lexer"
+	"charm/object"
 	"charm/parser"
 	"testing"
 )
@@ -134,6 +134,65 @@ func TestBuiltinPopFunction(t *testing.T) {
             if !testIntegerObject(t, arrayObj.Elements[i], test.expectedArray[i]) {
                 continue
             }
+        }
+    }
+}
+
+func TestBuiltinKeysFunction(t *testing.T) {
+    input := `let two = "two";
+    keys({
+    "one": 10 - 9,
+    two: 1 + 1,
+    "thr" + "ee": 6 / 2,
+    4: 4,
+    true: 5,
+    false: 6
+    })`
+
+    expectedKeys := map[any]int {
+        "one": 0,
+        "two": 0,
+        "three": 0,
+        4: 1,
+        true: 0,
+        false: 0,
+    }
+
+    evaluated := evalTest(input)
+
+    keysArrayobj, ok := evaluated.(*object.Array)
+    if !ok {
+        t.Fatalf("object not Array. Got=%s", evaluated.Type())
+    }
+
+    keys := keysArrayobj.Elements
+    if len(keys) != len(expectedKeys) {
+        t.Fatalf("Incorrect length. Expected=%d. Got=%d", len(expectedKeys), len(keys))
+    }
+
+    for _, key := range keys {
+        switch keyVal := key.(type) {
+        case *object.String:
+            if _, ok = expectedKeys[keyVal.Value]; !ok {
+                t.Fatalf("unexpected key: %s", keyVal.Inspect())
+            }
+            expectedKeys[keyVal.Value] = 1
+        case *object.Boolean:
+            if _, ok = expectedKeys[keyVal.Value]; !ok {
+                t.Fatalf("unexpected key: %s", keyVal.Inspect())
+            }
+            expectedKeys[keyVal.Value] = 1
+        case *object.Integer:
+            if _, ok = expectedKeys[int(keyVal.Value)]; !ok {
+                t.Fatalf("unexpected key: %s", keyVal.Inspect())
+            }
+            expectedKeys[keyVal.Value] = 1
+        }
+    }
+
+    for key, val := range expectedKeys {
+        if val != 1 {
+            t.Fatalf("key missing: %s", key)
         }
     }
 }

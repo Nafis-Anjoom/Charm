@@ -10,7 +10,6 @@ import (
 
 type ObjectType string
 
-type BuiltinFunction func(args ...Object) Object
 
 const (
 	INTEGER_OBJ      = "INTEGER"
@@ -118,6 +117,7 @@ func (f *Function) Inspect() string {
 	return out.String()
 }
 
+type BuiltinFunction func(args ...Object) Object
 type Builtin struct {
 	Fn BuiltinFunction
 }

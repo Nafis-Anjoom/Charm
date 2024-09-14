@@ -1,6 +1,9 @@
 package evaluator
 
-import "charm/object"
+import (
+	"charm/object"
+	"fmt"
+)
 
 var builtins = map[string]*object.Builtin {
     "len": {
@@ -54,6 +57,35 @@ var builtins = map[string]*object.Builtin {
             arrayObj.Elements = arrayObj.Elements[0:arrayLen - 1]
 
             return lastELement
+        },
+    },
+    "keys": {
+        Fn: func(args ...object.Object) object.Object {
+            if len(args) != 1 {
+                return newError("wrong number of arguments. got=%d, want=1", len(args))
+            }
+            if args[0].Type() != object.HASHMAP_OBJ {
+                return newError("argument to `keys` must be HASHMAP, got %s",
+                    args[0].Type())
+            }
+
+            hashMapObj := args[0].(*object.HashMap)
+            keys := &object.Array{Elements: []object.Object{}}
+
+            for _, pair := range hashMapObj.Map {
+                keys.Elements = append(keys.Elements, pair.Key)
+            }
+
+            return keys
+        },
+    },
+    "print": {
+        Fn: func(args ...object.Object) object.Object {
+            for _, arg := range args {
+                fmt.Println(arg.Inspect())
+            }
+
+            return NULL
         },
     },
 }
