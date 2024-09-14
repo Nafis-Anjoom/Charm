@@ -93,7 +93,6 @@ func evalStatements(stmts []ast.Statement, env *object.Environment) object.Objec
     return result
 }
 
-// DNOTE: return NULL when encountering unknown prefix operator 
 func evalPrefixExpression(exp *ast.PrefixExpression, env *object.Environment) object.Object {
     right := Eval(exp.Right, env)
     if isError(right) {
