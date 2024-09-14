@@ -30,6 +30,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
         return evalInfixExpression(node, env)
     case *ast.IfExpression:
         return evalIfExpression(node, env)
+    case *ast.WhileStatement:
+        return evalWhileStatemnt(node, env)
     case *ast.BlockStatement:
         return evalStatements(node.Statements, env)
     case *ast.ReturnStatement:
@@ -197,6 +199,27 @@ func evalIfExpression(node *ast.IfExpression, env *object.Environment) object.Ob
     } else {
         return NULL
     }
+}
+
+func evalWhileStatemnt(node *ast.WhileStatement, env *object.Environment) object.Object {
+    condition := Eval(node.Condition, env)
+    
+    if isError(condition) {
+        return condition
+    }
+
+    var evaluated object.Object = NULL
+    for isTruthy(condition) {
+        evaluated = Eval(node.Body, env)
+
+        if evaluated.Type() == object.RETURN_VALUE_OBJ {
+            return evaluated
+        }
+
+        condition = Eval(node.Condition, env)
+    }
+
+    return evaluated
 }
 
 func evalCallExpression(node *ast.CallExpression, env *object.Environment) object.Object {

@@ -198,6 +198,47 @@ func TestReturnStatements(t *testing.T) {
     }
 }
 
+func TestWhileStatement(t *testing.T) {
+    input := `
+    let x = 10;
+    while (x > 0) { let x = x - 1; }
+    `
+
+    evaluated := evalTest(input)
+
+    int, ok := evaluated.(*object.Integer)
+    if !ok {
+        t.Fatalf("Expected=%s. Got=%s", object.INTEGER_OBJ, evaluated.Type())
+    }
+
+    testIntegerObject(t, int, 0)
+}
+
+func TestReturnInWhileLoop(t *testing.T) {
+    input := `
+    let x = 10;
+    while (x > 0) { let x = x - 1; return x;}
+    `
+    evaluated := evalTest(input)
+
+    int, ok := evaluated.(*object.Integer)
+    if !ok {
+        t.Fatalf("Expected=%s. Got=%s", object.INTEGER_OBJ, evaluated.Type())
+    }
+
+    testIntegerObject(t, int, 9)
+}
+
+func TestWhileNoEval(t *testing.T) {
+    input := `
+    let x = 10;
+    while (x > 120) { let x = x - 1; return x;}
+    `
+    evaluated := evalTest(input)
+
+    testNullObject(t, evaluated)
+}
+
 func TestLetStatement(t *testing.T) {
     tests := []struct {
         input string
