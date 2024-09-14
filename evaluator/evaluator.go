@@ -47,6 +47,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
         }
         env.Set(node.Identifier.Value, value)
         return value
+    case *ast.FunctionStatement:
+        return evalFunctionStatement(node, env)
     case *ast.Identifier:
         return evalIdentifier(node, env)
     case *ast.FunctionLiteral:
@@ -72,6 +74,7 @@ func evalProgram(program *ast.Program, env *object.Environment) object.Object {
         case *object.ReturnValue:
             return result.Value
         case *object.Error:
+            fmt.Println(result.Message)
             return result
         }
     }
@@ -221,16 +224,28 @@ func evalWhileStatemnt(node *ast.WhileStatement, env *object.Environment) object
     return evaluated
 }
 
+func evalFunctionStatement(stmt *ast.FunctionStatement, env *object.Environment) object.Object {
+    function := &object.Function{
+        Parameters: stmt.FunctionLiteral.Parameters,
+        Body: stmt.FunctionLiteral.Body,
+        Env: env,
+    }
+
+    env.Set(stmt.Identifier.Value, function)
+
+    return function
+}
+
 func evalCallExpression(node *ast.CallExpression, env *object.Environment) object.Object {
     arguments := evalExpressions(node.Arguments, env)
+    if len(arguments) == 1 && arguments[0].Type() == object.ERROR_OBJ {
+        return arguments[0]
+    }
+
     obj := Eval(node.FunctionLiteral, env)
 
     switch functionObj := obj.(type) {
     case *object.Function:
-        if len(arguments) == 0 && arguments[0].Type() == object.ERROR_OBJ {
-            return arguments[0]
-        }
-
         if len(arguments) > len(functionObj.Parameters) {
             return newError("too many arguments")
         }

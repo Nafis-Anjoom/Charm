@@ -123,6 +123,7 @@ func (parser *Parser) ParseProgram() *ast.Program {
 
         parser.nextToken()
     }
+
     return &program
 }
 
@@ -137,6 +138,8 @@ func (parser *Parser) parseStatement() ast.Statement {
             return parser.parseIfStatement()
         case currToken == token.WHILE:
             return parser.parseWhileStatement()
+        case currToken == token.FUNCTION && parser.peekToken.Type == token.IDENT:
+            return parser.parseFunctionStatement()
         default:
             return parser.parseExpressionStatement()
     }
@@ -153,10 +156,6 @@ func (parser *Parser) parseAssignmentStatement() *ast.AssignmentStatement {
 
     parser.nextToken()
     stmt.Value = parser.parseExpression(LOWEST)
-
-    // if parser.peekToken.Type == token.SEMICOLON {
-    //     parser.nextToken()
-    // }
 
     if !parser.expectPeek(token.SEMICOLON) {
         return nil
@@ -204,6 +203,38 @@ func (parser *Parser) parseWhileStatement() *ast.WhileStatement {
 
     stmt.Condition = condition
     stmt.Body = body
+
+    return stmt
+}
+func (parser *Parser) parseFunctionStatement() *ast.FunctionStatement {
+    stmt := &ast.FunctionStatement{Token: parser.currToken}
+    funcLit := &ast.FunctionLiteral{Token: parser.currToken}
+
+    parser.nextToken()
+    identifierExpr := parser.parseIdentifier()
+    identifier, ok := identifierExpr.(*ast.Identifier)
+    if !ok {
+        parser.errors = append(parser.errors, "unable to parse function identifier")
+        return nil
+    }
+
+    if !parser.expectPeek(token.LPAREN) {
+        return nil
+    }
+
+    parameters := parser.parseFunctionParameters()
+
+    if !parser.expectPeek(token.LBRACE) {
+        return nil
+    }
+
+    body := parser.parseBlockStatement()
+
+    funcLit.Parameters = parameters
+    funcLit.Body = body
+
+    stmt.Identifier = identifier
+    stmt.FunctionLiteral = funcLit
 
     return stmt
 }

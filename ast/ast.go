@@ -216,6 +216,7 @@ func (ie *IfStatement) statementNode() {}
 func (ie *IfStatement) TokenLiteral() string { return ie.Token.Literal }
 func (ie *IfStatement) String() string {
     var out bytes.Buffer
+
     out.WriteString("if")
     out.WriteString(ie.Condition.String())
     out.WriteString(" ")
@@ -225,6 +226,7 @@ func (ie *IfStatement) String() string {
         out.WriteString("else ")
     out.WriteString(ie.Alternative.String())
     }
+
     return out.String()
 }
 
@@ -248,6 +250,31 @@ func (fl *FunctionLiteral) String() string {
     out.WriteString(strings.Join(params, ", "))
     out.WriteString(") ")
     out.WriteString(fl.Body.String())
+
+    return out.String()
+}
+
+type FunctionStatement struct {
+    Token token.Token
+    Identifier *Identifier
+    FunctionLiteral *FunctionLiteral
+}
+func (fs *FunctionStatement) statementNode() {}
+func (fs *FunctionStatement) TokenLiteral() string { return fs.Token.Literal }
+func (fs *FunctionStatement) String() string {
+    var out bytes.Buffer
+
+    params := []string {}
+    for _, p := range fs.FunctionLiteral.Parameters {
+        params = append(params, p.String())
+    }
+
+    out.WriteString(fs.Token.Literal)
+    out.WriteString(" " + fs.Identifier.String())
+    out.WriteString("(")
+    out.WriteString(strings.Join(params, ", "))
+    out.WriteString(") ")
+    out.WriteString(fs.FunctionLiteral.Body.String())
 
     return out.String()
 }

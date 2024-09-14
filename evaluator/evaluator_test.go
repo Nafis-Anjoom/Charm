@@ -285,6 +285,31 @@ func TestFunctionObject(t *testing.T) {
     }
 }
 
+func TestFunctionStatement(t *testing.T) {
+    test := "func z(x) { x + 2; }"
+    evaluated := evalTest(test)
+
+    funcObj, ok := evaluated.(*object.Function)
+    if !ok {
+        t.Errorf("object not Function. Got type=%T(%+v)", evaluated, evaluated)
+        return
+    }
+
+    params := funcObj.Parameters
+    if len(params) != 1 {
+        t.Fatalf("Function has more than 1 parameter. Got=%d)", len(params))
+    }
+    if params[0].String() != "x" {
+        t.Fatalf("Function paramter not X. Got=%s)", params[0].String())
+    }
+
+    expectedBody := "(x + 2)"
+    if funcObj.Body.String() != expectedBody {
+        t.Fatalf("body is %q. got %q", expectedBody, funcObj.Body.String())
+    }
+
+}
+
 func TestFunctionCall(t *testing.T) {
     tests := []struct {
         input string
