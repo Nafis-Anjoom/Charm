@@ -339,3 +339,24 @@ func (hm *HashMapLiteral) String() string {
 
     return out.String()
 }
+
+type WhileStatement struct {
+    Token token.Token
+    Condition Expression
+    Body *BlockStatement
+}
+
+func (w *WhileStatement) statementNode() {}
+func (w *WhileStatement) TokenLiteral() string { return w.Token.Literal }
+func (w *WhileStatement) String() string {
+    var out bytes.Buffer
+
+    out.WriteString("while")
+    out.WriteString(w.Condition.String())
+    out.WriteString("\n")
+    out.WriteString(w.Body.String())
+    out.WriteString("\n")
+
+    return out.String()
+}
+

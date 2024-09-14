@@ -133,6 +133,8 @@ func (parser *Parser) parseStatement() ast.Statement {
             return parser.parseLetStatement()
         case token.RETURN:
             return parser.parseReturnStatement()
+        case token.WHILE:
+            return parser.parseWhileStatement()
         default:
             return parser.parseExpressionStatement()
     }
@@ -171,6 +173,40 @@ func (parser *Parser) parseReturnStatement() *ast.ReturnStatement {
     if parser.peekToken.Type == token.SEMICOLON {
         parser.nextToken()
     }
+
+    return stmt
+}
+
+func (parser *Parser) parseWhileStatement() *ast.WhileStatement {
+    stmt := &ast.WhileStatement{Token: parser.currToken}
+
+    if !parser.expectPeek(token.LPAREN) {
+        return nil
+    }
+    parser.nextToken()
+    condition := parser.parseExpression(LOWEST)
+    if condition == nil {
+        return nil
+    }
+
+    if !parser.expectPeek(token.RPAREN) {
+        return nil
+    }
+
+    if !parser.expectPeek(token.LBRACE) {
+        return nil
+    }
+
+    body := parser.parseBlockStatement()
+
+    if parser.currToken.Type != token.RBRACE {
+        return nil
+    }
+
+    parser.nextToken()
+
+    stmt.Condition = condition
+    stmt.Body = body
 
     return stmt
 }

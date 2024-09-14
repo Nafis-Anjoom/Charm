@@ -85,6 +85,47 @@ func TestReturnStatement(t *testing.T) {
     }
 }
 
+func TestWhileStatement(t *testing.T) {
+    input := `while (x < 10) { x; }`
+
+    lexer := lexer.New(input)
+    parser := New(lexer)
+    program := parser.ParseProgram()
+
+    checkParserErrors(t, parser)
+
+    if len(program.Statements) != 1 {
+        t.Fatalf("program.Statements does not contain 1 statements. got=%d\n", len(program.Statements))
+    }
+
+    stmt := program.Statements[0]
+    if stmt.TokenLiteral() != "while" {
+        t.Fatalf("stmt.TokenLiteral not 'while'. got=%q", stmt.TokenLiteral())
+    }
+
+    whileStmt, ok := stmt.(*ast.WhileStatement)
+    if !ok {
+        t.Fatalf("stmt not *ast.WhileStatement. got=%T\n", stmt)
+    }
+
+    if !testInfixExpression(t, whileStmt.Condition, "x", "<", 10) {
+        t.FailNow()
+    }
+
+    if len(whileStmt.Body.Statements) != 1 {
+        t.Fatalf("Body length wrong. Expected=1. Got=%d", len(whileStmt.Body.Statements))
+    }
+
+    exprStmt, ok := whileStmt.Body.Statements[0].(*ast.ExpressionStatement)
+    if !ok {
+        t.Fatalf("body is not an expression statement. Got=%T", whileStmt.Body.Statements[0])
+    }
+
+    if exprStmt.Expression.String() != "x" {
+        t.Fatalf(`body does not match. Expected=x. Got=%s`, exprStmt.Expression.String())
+    }
+}
+
 func TestError(t *testing.T) {
     tests := []struct {
         inputStatement string
