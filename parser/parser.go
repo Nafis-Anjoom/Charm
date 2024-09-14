@@ -185,6 +185,7 @@ func (parser *Parser) parseWhileStatement() *ast.WhileStatement {
     if !parser.expectPeek(token.LPAREN) {
         return nil
     }
+
     parser.nextToken()
     condition := parser.parseExpression(LOWEST)
     if condition == nil {
@@ -200,12 +201,6 @@ func (parser *Parser) parseWhileStatement() *ast.WhileStatement {
     }
 
     body := parser.parseBlockStatement()
-
-    if parser.currToken.Type != token.RBRACE {
-        return nil
-    }
-
-    parser.nextToken()
 
     stmt.Condition = condition
     stmt.Body = body
@@ -262,13 +257,11 @@ func (parser *Parser) parseIfStatement() *ast.IfStatement {
     stmt := &ast.IfStatement{Token: parser.currToken}
 
     if !parser.expectPeek(token.LPAREN) {
-        fmt.Println("left paren not found for if statement")
         return nil
     }
 
     parser.nextToken()
     stmt.Condition = parser.parseExpression(LOWEST)
-
     if !parser.expectPeek(token.RPAREN) {
         return nil
     }
