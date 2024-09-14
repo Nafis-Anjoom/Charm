@@ -579,7 +579,7 @@ func TestIfElseExpression(t *testing.T) {
 }
 
 func TestParseFunctionLiteral(t *testing.T) {
-    input := `fn(x, y) {x + y;};`
+    input := `func(x, y) {x + y;};`
 
     lexer := lexer.New(input)
     parser := New(lexer)
@@ -626,9 +626,9 @@ func TestParseFunctionParameters(t *testing.T) {
         input string
         expected []string
     } {
-        {input: "fn() {};", expected: []string{}},
-        {input: "fn(x) {};", expected: []string{"x"}},
-        {input: "fn(x, y, z) {};", expected: []string{"x", "y", "z"}},
+        {input: "func() {};", expected: []string{}},
+        {input: "func(x) {};", expected: []string{"x"}},
+        {input: "func(x, y, z) {};", expected: []string{"x", "y", "z"}},
     }
 
     for _, test := range tests {

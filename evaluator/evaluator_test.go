@@ -262,7 +262,7 @@ func TestAssignmentStatement(t *testing.T) {
 }
 
 func TestFunctionObject(t *testing.T) {
-    test := "fn(x) { x + 2; };"
+    test := "func(x) { x + 2; };"
     evaluated := evalTest(test)
 
     funcObj, ok := evaluated.(*object.Function)
@@ -290,12 +290,12 @@ func TestFunctionCall(t *testing.T) {
         input string
         expected int64
     } {
-        {"identity = fn(x) { x; }; identity(5);", 5},
-        {"identity = fn(x) { return x; }; identity(5);", 5},
-        {"double = fn(x) { x * 2; }; double(5);", 10},
-        {"add = fn(x, y) { x + y; }; add(5, 5);", 10},
-        {"add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));", 20},
-        {"fn(x) { x; }(5);", 5},
+        {"identity = func(x) { x; }; identity(5);", 5},
+        {"identity = func(x) { return x; }; identity(5);", 5},
+        {"double = func(x) { x * 2; }; double(5);", 10},
+        {"add = func(x, y) { x + y; }; add(5, 5);", 10},
+        {"add = func(x, y) { x + y; }; add(5 + 5, add(5, 5));", 20},
+        {"func(x) { x; }(5);", 5},
     }
 
     for _, test := range tests {
@@ -306,8 +306,8 @@ func TestFunctionCall(t *testing.T) {
 
 func TestClosures(t *testing.T) {
     input := `
-    newAdder = fn(x) {
-        fn(y) { x + y; };
+    newAdder = func(x) {
+        func(y) { x + y; };
     };
     addTwo = newAdder(2);
     addTwo(2);`
