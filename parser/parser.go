@@ -67,7 +67,7 @@ func New(lexer *lexer.Lexer) *Parser {
     parser.registerPrefix(token.TRUE, parser.parseBooleanLiteral)
     parser.registerPrefix(token.FALSE, parser.parseBooleanLiteral)
     parser.registerPrefix(token.STRING, parser.parseStringLiteral)
-    parser.registerPrefix(token.IF, parser.parseIfExpression)
+    // parser.registerPrefix(token.IF, parser.parseIfExpression)
     parser.registerPrefix(token.FUNCTION, parser.parseFunctionLiteral)
     parser.registerPrefix(token.LBRACKET, parser.parseArrayLiteral)
     parser.registerPrefix(token.LBRACE, parser.parseHashMapLiteral)
@@ -133,6 +133,8 @@ func (parser *Parser) parseStatement() ast.Statement {
             return parser.parseLetStatement()
         case token.RETURN:
             return parser.parseReturnStatement()
+        case token.IF:
+            return parser.parseIfStatement()
         case token.WHILE:
             return parser.parseWhileStatement()
         default:
@@ -252,8 +254,8 @@ func (parser *Parser) parseIdentifier() ast.Expression {
     return &ast.Identifier{Token: parser.currToken, Value: parser.currToken.Literal}
 }
 
-func (parser *Parser) parseIfExpression() ast.Expression {
-    exp := &ast.IfExpression{Token: parser.currToken}
+func (parser *Parser) parseIfStatement() *ast.IfStatement {
+    stmt := &ast.IfStatement{Token: parser.currToken}
 
     if !parser.expectPeek(token.LPAREN) {
         fmt.Println("left paren not found for if statement")
@@ -261,7 +263,7 @@ func (parser *Parser) parseIfExpression() ast.Expression {
     }
 
     parser.nextToken()
-    exp.Condition = parser.parseExpression(LOWEST)
+    stmt.Condition = parser.parseExpression(LOWEST)
 
     if !parser.expectPeek(token.RPAREN) {
         return nil
@@ -271,7 +273,7 @@ func (parser *Parser) parseIfExpression() ast.Expression {
         return nil
     }
 
-    exp.Consequence = parser.parseBlockStatement()
+    stmt.Consequence = parser.parseBlockStatement()
 
     if parser.peekToken.Type == token.ELSE {
         parser.nextToken()
@@ -280,9 +282,9 @@ func (parser *Parser) parseIfExpression() ast.Expression {
             return nil
         }
 
-        exp.Alternative = parser.parseBlockStatement()
+        stmt.Alternative = parser.parseBlockStatement()
     }
-    return exp
+    return stmt
 }
 
 func (parser *Parser) parseBlockStatement() *ast.BlockStatement {

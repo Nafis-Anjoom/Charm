@@ -207,15 +207,15 @@ func (bs *BlockStatement) String() string {
     return out.String()
 }
 
-type IfExpression struct {
+type IfStatement struct {
     token.Token
     Condition Expression
     Consequence *BlockStatement
     Alternative *BlockStatement
 }
-func (ie *IfExpression) expressionNode() {}
-func (ie *IfExpression) TokenLiteral() string { return ie.Token.Literal }
-func (ie *IfExpression) String() string {
+func (ie *IfStatement) statementNode() {}
+func (ie *IfStatement) TokenLiteral() string { return ie.Token.Literal }
+func (ie *IfStatement) String() string {
     var out bytes.Buffer
     out.WriteString("if")
     out.WriteString(ie.Condition.String())

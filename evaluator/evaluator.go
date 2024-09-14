@@ -28,8 +28,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
         return evalPrefixExpression(node, env)
     case *ast.InfixExpression:
         return evalInfixExpression(node, env)
-    case *ast.IfExpression:
-        return evalIfExpression(node, env)
+    case *ast.IfStatement:
+        return evalIfStatement(node, env)
     case *ast.WhileStatement:
         return evalWhileStatemnt(node, env)
     case *ast.BlockStatement:
@@ -185,7 +185,7 @@ func evalIntegerInfixExpression(left int64, operator string, right int64) object
     }
 }
 
-func evalIfExpression(node *ast.IfExpression, env *object.Environment) object.Object {
+func evalIfStatement(node *ast.IfStatement, env *object.Environment) object.Object {
     condition := Eval(node.Condition, env)
     if isError(condition) {
         return condition
