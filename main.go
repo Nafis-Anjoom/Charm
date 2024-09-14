@@ -14,7 +14,6 @@ func main() {
     args := os.Args
 
     if len(args) == 1 {
-        fmt.Println(args)
         fmt.Printf("Charm v0.1\n")
         repl.Start(os.Stdin, os.Stdout)
     } else if len(args) == 2 {
