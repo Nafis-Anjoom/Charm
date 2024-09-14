@@ -434,6 +434,52 @@ func TestHashMapLiteral(t *testing.T) {
     }
 }
 
+func TestHashIndexExpressions(t *testing.T) {
+    tests := []struct {
+        input string
+        expected any
+    } {
+        {
+            `{"foo": 5}["foo"]`,
+            5,
+        },
+        {
+            `{"foo": 5}["bar"]`,
+            nil,
+        },
+        {
+            `let key = "foo"; {"foo": 5}[key]`,
+            5,
+        },
+        {
+            `{}["foo"]`,
+            nil,
+        },
+        {
+            `{5: 5}[5]`,
+            5,
+        },
+        {
+            `{true: 5}[true]`,
+            5,
+        },
+        {
+            `{false: 5}[false]`,
+            5,
+        },
+    }
+
+    for _, test := range tests {
+        evaluated := evalTest(test.input)
+        integer, ok := test.expected.(int)
+        if ok {
+            testIntegerObject(t, evaluated, int64(integer))
+        } else {
+            testNullObject(t, evaluated)
+        }
+    }
+}
+
 // helpers
 func evalTest(input string) object.Object {
     lexer := lexer.New(input)

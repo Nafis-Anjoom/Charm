@@ -188,7 +188,7 @@ func (hm *HashMap) Inspect() string {
 // necessary for viewing the value through Inspect()
 // TODO: investigate the performance impact of nested interfaces
 type Hashable interface {
-	Object
+    Object
 	HashCode() uint64
 }
 func (i *Integer) HashCode() uint64 {

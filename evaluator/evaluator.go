@@ -246,22 +246,49 @@ func evalIdentifier(Identifier *ast.Identifier, env *object.Environment) object.
 
 func evalIndexExpression(indexExpr *ast.IndexExpression, env *object.Environment) object.Object {
     obj := Eval(indexExpr.Left, env)
-    array, ok := obj.(*object.Array)
-    if !ok {
-        return newError("index operator not supported: %s", obj.Type())
+    // what happens if this is NULL?
+    indexObj := Eval(indexExpr.Index, env)
+
+    if isError(indexObj) || indexObj == NULL {
+        return newError("error evaluating index: %s", indexObj.Inspect())
     }
 
-    indexObj := Eval(indexExpr.Index, env)
+    switch obj := obj.(type) {
+    case *object.Array:
+        return evalArrayIndexExpression(obj, indexObj, env)
+    case *object.HashMap:
+        return evalHashMapIndexExpression(obj, indexObj, env)
+    default:
+        return newError("index operator not supported: %s", obj.Type())
+    }
+}
+
+func evalArrayIndexExpression(arrayObj *object.Array, indexObj object.Object, env *object.Environment) object.Object {
     index, ok := indexObj.(*object.Integer)
     if !ok {
         return newError("not an integer: %T", index)
     }
 
-    if int(index.Value) >= len(array.Elements) || index.Value < 0 {
+    if int(index.Value) >= len(arrayObj.Elements) || index.Value < 0 {
         return NULL
     }
 
-    return array.Elements[index.Value]
+    return arrayObj.Elements[index.Value]
+}
+
+func evalHashMapIndexExpression(hashMapObj *object.HashMap, indexObj object.Object, env *object.Environment) object.Object {
+    HashObj, ok := indexObj.(object.Hashable)
+    if !ok {
+        return newError("unusable as haskey: %s", indexObj.Type())
+    }
+
+    hashCode := HashObj.HashCode()
+
+    pair, ok := hashMapObj.Map[hashCode]
+    if !ok {
+        return NULL
+    }
+    return pair.Value
 }
 
 func evalHashMapLiteral(hashMap *ast.HashMapLiteral, env *object.Environment) object.Object {
@@ -315,6 +342,7 @@ func newError(format string, arguments ...any) *object.Error {
 
 func isError(obj object.Object) bool {
     if obj != nil {
+        // return obj.Type() == object.ERROR_OBJ
         return obj.Type() == object.RETURN_VALUE_OBJ
     }
     return false
