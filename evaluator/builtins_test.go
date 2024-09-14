@@ -196,3 +196,41 @@ func TestBuiltinKeysFunction(t *testing.T) {
         }
     }
 }
+
+func TestBuiltinDeleteFunction(t *testing.T) {
+    input := `
+    let x = {
+    "one": 10 - 9,
+    "two": 1 + 1,
+    };
+    
+    delete(x, "two");
+    delete(x, "three");
+    `
+
+    lexer := lexer.New(input)
+    parser := parser.New(lexer)
+    program := parser.ParseProgram()
+
+    env := object.NewEnvironment()
+    Eval(program, env)
+
+    x, ok := env.Get("x")
+    if !ok {
+        t.Fatal("x not found")
+    }
+
+    hashMap, ok := x.(*object.HashMap)
+    if !ok {
+        t.Fatalf("x is not an hashMap: %s", x.Type())
+    }
+
+    if len(hashMap.Map) != 1 {
+        t.Fatalf("Incorrect length. Expected %d. Got %d", 1, len(hashMap.Map))
+    }
+
+    _, ok = hashMap.Map[(&object.String{Value: "one"}).HashCode()]
+    if !ok {
+        t.Fatalf("Missing entry")
+    }
+}

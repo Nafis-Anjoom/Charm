@@ -79,6 +79,29 @@ var builtins = map[string]*object.Builtin {
             return keys
         },
     },
+    "delete": {
+        Fn: func(args ...object.Object) object.Object {
+            if len(args) != 2 {
+                return newError("wrong number of arguments. got=%d, want=2", len(args))
+            }
+
+            if args[0].Type() != object.HASHMAP_OBJ {
+                return newError("argument to `delete` must be HASHMAP, got %s",
+                    args[0].Type())
+            }
+
+            hashMapObj := args[0].(*object.HashMap)
+
+            hashable, ok := args[1].(object.Hashable)
+            if !ok {
+                return newError("unusable as a hashkey: %s", args[1].Type())
+            }
+
+            delete(hashMapObj.Map, hashable.HashCode())
+
+            return NULL
+        },
+    },
     "print": {
         Fn: func(args ...object.Object) object.Object {
             for _, arg := range args {
