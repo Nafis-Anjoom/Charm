@@ -229,7 +229,6 @@ func evalCallExpression(node *ast.CallExpression, env *object.Environment) objec
     default:
         return newError("not a function: %s", obj.Type())
     }
-
 }
 
 func evalIdentifier(Identifier *ast.Identifier, env *object.Environment) object.Object {
@@ -342,8 +341,7 @@ func newError(format string, arguments ...any) *object.Error {
 
 func isError(obj object.Object) bool {
     if obj != nil {
-        // return obj.Type() == object.ERROR_OBJ
-        return obj.Type() == object.RETURN_VALUE_OBJ
+        return obj.Type() == object.ERROR_OBJ
     }
     return false
 }

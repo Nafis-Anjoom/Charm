@@ -98,7 +98,7 @@ type Function struct {
 }
 
 func (f *Function) Type() ObjectType {
-	return ERROR_OBJ
+	return FUNCTION_OBJ
 }
 func (f *Function) Inspect() string {
 	var out bytes.Buffer
