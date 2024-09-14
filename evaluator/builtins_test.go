@@ -12,13 +12,13 @@ func TestBuiltinLenFunction(t *testing.T) {
         input string
         expected any
     } {
-        {`len("")`, 0},
-        {`len("four")`, 4},
-        {`len("hello world")`, 11},
-        {`len(1)`, "argument to `len` not supported, got INTEGER"},
-        {`len("one", "two")`, "wrong number of arguments. got=2, want=1"},
-        {`len([1, "string", true, 4])`, 4},
-        {`len([])`, 0},
+        {`len("");`, 0},
+        {`len("four");`, 4},
+        {`len("hello world");`, 11},
+        {`len(1);`, "argument to `len` not supported, got INTEGER"},
+        {`len("one", "two");`, "wrong number of arguments. got=2, want=1"},
+        {`len([1, "string", true, 4]);`, 4},
+        {`len([]);`, 0},
     }
 
     for _, test := range tests {
@@ -46,9 +46,9 @@ func TestBuiltinPushFunction(t *testing.T) {
         input string
         expected any
     } {
-        {`let x = [1, 2, 3]; push(x, 4);`, []int{1, 2, 3, 4}},
-        {`let x = []; push(x, 4);`, []int{4}},
-        {`let x = "string"; push(x, 4);`, "argument to `push` must be ARRAY, got STRING"},
+        {`x = [1, 2, 3]; push(x, 4);`, []int{1, 2, 3, 4}},
+        {`x = []; push(x, 4);`, []int{4}},
+        {`x = "string"; push(x, 4);`, "argument to `push` must be ARRAY, got STRING"},
     }
 
     for _, test := range tests {
@@ -90,8 +90,8 @@ func TestBuiltinPopFunction(t *testing.T) {
         expectedArray []int64
         expectedRetValue int64
     } {
-        {`let x = [1, 2, 3]; pop(x);`, []int64{1, 2}, 3},
-        {`let x = [1]; pop(x);`, []int64{}, 1},
+        {`x = [1, 2, 3]; pop(x);`, []int64{1, 2}, 3},
+        {`x = [1]; pop(x);`, []int64{}, 1},
     }
 
     for _, test := range tests {
@@ -139,7 +139,7 @@ func TestBuiltinPopFunction(t *testing.T) {
 }
 
 func TestBuiltinKeysFunction(t *testing.T) {
-    input := `let two = "two";
+    input := `two = "two";
     keys({
     "one": 10 - 9,
     two: 1 + 1,
@@ -147,7 +147,7 @@ func TestBuiltinKeysFunction(t *testing.T) {
     4: 4,
     true: 5,
     false: 6
-    })`
+    });`
 
     expectedKeys := map[any]int {
         "one": 0,
@@ -199,7 +199,7 @@ func TestBuiltinKeysFunction(t *testing.T) {
 
 func TestBuiltinDeleteFunction(t *testing.T) {
     input := `
-    let x = {
+    x = {
     "one": 10 - 9,
     "two": 1 + 1,
     };
