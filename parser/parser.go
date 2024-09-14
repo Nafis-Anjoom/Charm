@@ -127,26 +127,23 @@ func (parser *Parser) ParseProgram() *ast.Program {
 }
 
 func (parser *Parser) parseStatement() ast.Statement {
-    switch parser.currToken.Type {
-        case token.LET:
-            return parser.parseLetStatement()
-        case token.RETURN:
+    currToken := parser.currToken.Type 
+    switch {
+        case currToken == token.IDENT && parser.peekToken.Type == token.ASSIGN:
+            return parser.parseAssignmentStatement()
+        case currToken == token.RETURN:
             return parser.parseReturnStatement()
-        case token.IF:
+        case currToken == token.IF:
             return parser.parseIfStatement()
-        case token.WHILE:
+        case currToken == token.WHILE:
             return parser.parseWhileStatement()
         default:
             return parser.parseExpressionStatement()
     }
 }
 
-func (parser *Parser) parseLetStatement() *ast.LetStatement {
-    stmt := &ast.LetStatement{Token: parser.currToken}
-
-    if !parser.expectPeek(token.IDENT) {
-        return nil
-    }
+func (parser *Parser) parseAssignmentStatement() *ast.AssignmentStatement {
+    stmt := &ast.AssignmentStatement{Token: parser.currToken}
 
     stmt.Identifier = &ast.Identifier{Token: parser.currToken, Value: parser.currToken.Literal } 
 
@@ -157,8 +154,12 @@ func (parser *Parser) parseLetStatement() *ast.LetStatement {
     parser.nextToken()
     stmt.Value = parser.parseExpression(LOWEST)
 
-    if parser.peekToken.Type == token.SEMICOLON {
-        parser.nextToken()
+    // if parser.peekToken.Type == token.SEMICOLON {
+    //     parser.nextToken()
+    // }
+
+    if !parser.expectPeek(token.SEMICOLON) {
+        return nil
     }
 
     return stmt
@@ -217,8 +218,12 @@ func (parser *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 
     stmt.Expression = parser.parseExpression(LOWEST)
 
-    if parser.peekToken.Type == token.SEMICOLON {
-        parser.nextToken()
+    // if parser.peekToken.Type == token.SEMICOLON {
+    //     parser.nextToken()
+    // }
+
+    if !parser.expectPeek(token.SEMICOLON) {
+        return nil
     }
 
     return stmt
@@ -540,7 +545,8 @@ func (parser *Parser) parseHashMapLiteral() ast.Expression {
 }
 
 func (parser *Parser) noPrefixFnError(token token.TokenType) {
-    msg := fmt.Sprintf("no prefix parse function for %s found", token)
+    // msg := fmt.Sprintf("no prefix parse function for %s found", token)
+    msg := fmt.Sprintf("unexpected token: '%s'", token)
     parser.errors = append(parser.errors, msg)
 }
 

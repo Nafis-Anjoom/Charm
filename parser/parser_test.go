@@ -13,9 +13,9 @@ func TestLetStatements(t *testing.T) {
         expectedIdentifier string
         expectedValue any
     } {
-        {input: "let x = 5;", expectedIdentifier: "x", expectedValue: 5},
-        {input: "let y = 10;", expectedIdentifier: "y", expectedValue: 10},
-        {input: "let foobar = 838383;", expectedIdentifier: "foobar", expectedValue: 838383},
+        {input: "x = 5;", expectedIdentifier: "x", expectedValue: 5},
+        {input: "y = 10;", expectedIdentifier: "y", expectedValue: 10},
+        {input: "foobar = 838383;", expectedIdentifier: "foobar", expectedValue: 838383},
     }
 
     for _, test := range tests {
@@ -39,7 +39,7 @@ func TestLetStatements(t *testing.T) {
             return 
         }
 
-        val := stmt.(*ast.LetStatement).Value
+        val := stmt.(*ast.AssignmentStatement).Value
         if !testLiteralExpression(t, val, test.expectedValue) {
             return
         }
@@ -131,23 +131,26 @@ func TestError(t *testing.T) {
         inputStatement string
         outputError string
     } {
-        {"let x 1234;", "expected next token to be =, got INT instead"},
-        {"let = 5;", "expected next token to be IDENT, got = instead"},
-        {"let 838383;", "expected next token to be IDENT, got INT instead"},
+        {"x 1234;", "expected next token to be ;, got INT instead"},
+        {"x = 1234 5;", "expected next token to be ;, got INT instead"},
+        {" = 5;", "unexpected token: '='"},
     }
 
     for i, test := range tests {
         lexer := lexer.New(test.inputStatement)
         parser := New(lexer)
-        parser.ParseProgram()
+        program := parser.ParseProgram()
 
         errors := parser.GetErrors()
 
         if len(errors) == 0 {
-            t.Fatalf("expected parser to produce error\n")
+            fmt.Println(program.Statements[1].String())
+            t.Errorf("[%d]:expected parser to produce error\n", i)
+            continue
         } else {
             if errors[0] != test.outputError {
-                t.Fatalf(`[%d]:expected message "%s", got "%s"\n`, i, test.outputError, errors[0])
+                t.Errorf(`[%d]:expected message "%s", got "%s"\n`, i, test.outputError, errors[0])
+                continue
             }
         }
     }
@@ -247,8 +250,8 @@ func TestParsingPrefixExpressions(t *testing.T) {
         operator string
         value any
     } {
-        {"!5", "!", 5},
-        {"-15", "-", 15},
+        {"!5;", "!", 5},
+        {"-15;", "-", 15},
 
         {"!true;", "!", true},
         {"!false;", "!", false},
@@ -304,9 +307,9 @@ func TestParsingInfixExpressions(t *testing.T) {
         {"5 == 5;", 5, "==", 5},
         {"5 != 5;", 5, "!=", 5},
 
-        {"true == true", true, "==", true},
-        {"true != false", true, "!=", false},
-        {"false == false", false, "==", false},
+        {"true == true;", true, "==", true},
+        {"true != false;", true, "!=", false},
+        {"false == false;", false, "==", false},
     }
     for _, tt := range infixTests {
         l := lexer.New(tt.input)
@@ -347,116 +350,116 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
         expected string
     }{
         {
-            "-a * b",
+            "-a * b;",
             "((-a) * b)",
         },
         {
-            "!-a",
+            "!-a;",
             "(!(-a))",
         },
         {
-            "a + b + c",
+            "a + b + c;",
             "((a + b) + c)",
         },
         {
-            "a + b - c",
+            "a + b - c;",
             "((a + b) - c)",
         },
         {
-            "a * b * c",
+            "a * b * c;",
             "((a * b) * c)",
         },
         {
-            "a * b / c",
+            "a * b / c;",
             "((a * b) / c)",
         },
         {
-            "a + b / c",
+            "a + b / c;",
             "(a + (b / c))",
         },
         {
-            "a + b * c + d / e - f",
+            "a + b * c + d / e - f;",
             "(((a + (b * c)) + (d / e)) - f)",
         },
         {
-            "3 + 4; -5 * 5",
+            "3 + 4; -5 * 5;",
             "(3 + 4)((-5) * 5)",
         },
         {
-            "5 > 4 == 3 < 4",
+            "5 > 4 == 3 < 4;",
             "((5 > 4) == (3 < 4))",
         },
         {
-            "5 < 4 != 3 > 4",
+            "5 < 4 != 3 > 4;",
             "((5 < 4) != (3 > 4))",
         },
         {
-            "3 + 4 * 5 == 3 * 1 + 4 * 5",
+            "3 + 4 * 5 == 3 * 1 + 4 * 5;",
             "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
         },
         {
-            "3 + 4 * 5 == 3 * 1 + 4 * 5",
+            "3 + 4 * 5 == 3 * 1 + 4 * 5;",
             "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
         },
         {
-            "true",
+            "true;",
             "true",
         },
         {
-            "false",
+            "false;",
             "false",
         },
         {
-            "3 > 5 == false",
+            "3 > 5 == false;",
             "((3 > 5) == false)",
         },
         {
-            "3 < 5 == true",
+            "3 < 5 == true;",
             "((3 < 5) == true)",
         },
         {
-            "1 + (2 + 3) + 4",
+            "1 + (2 + 3) + 4;",
             "((1 + (2 + 3)) + 4)",
         },
         {
-            "(5 + 5) * 2",
+            "(5 + 5) * 2;",
             "((5 + 5) * 2)",
         },
         {
-            "2 / (5 + 5)",
+            "2 / (5 + 5);",
             "(2 / (5 + 5))",
         },
         {
-            "-(5 + 5)",
+            "-(5 + 5);",
             "(-(5 + 5))",
         },
         {
-            "!(true == true)",
+            "!(true == true);",
             "(!(true == true))",
         },
         {
-            "a + add(b * c) + d",
+            "a + add(b * c) + d;",
             "((a + add((b * c))) + d)",
         },
         {
-            "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
+            "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8));",
             "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))",
         },
         {
-            "add(a + b + c * d / f + g)",
+            "add(a + b + c * d / f + g);",
             "add((((a + b) + ((c * d) / f)) + g))",
         },
         {
-            "a * [1, 2, 3, 4][b * c] * d",
+            "a * [1, 2, 3, 4][b * c] * d;",
             "((a * ([1, 2, 3, 4][(b * c)])) * d)",
         },
         {
-            "add(a * b[2], b[1], 2 * [1, 2][1])",
+            "add(a * b[2], b[1], 2 * [1, 2][1]);",
             "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))",
         },
     }
 
-    for _, tt := range tests {
+    for i, tt := range tests {
         l := lexer.New(tt.input)
         p := New(l)
         program := p.ParseProgram()
@@ -465,13 +468,13 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 
         actual := program.String()
         if actual != tt.expected {
-            t.Errorf("expected=%q, got=%q", tt.expected, actual)
+            t.Errorf("[%d]: expected=%q, got=%q", i, tt.expected, actual)
         }
     }
 }
 
 func TestParsingIndexExpressions(t *testing.T) {
-    input := "myArray[1 + 1]"
+    input := "myArray[1 + 1];"
     l := lexer.New(input)
     p := New(l)
     program := p.ParseProgram()
@@ -491,14 +494,15 @@ func TestParsingIndexExpressions(t *testing.T) {
     }
 }
 
-func TestIfExpression(t *testing.T) {
-    input := `if (x < y) { x }`
+func TestIfStatement(t *testing.T) {
+    input := `if (x < y) { x; }`
 
     lexer := lexer.New(input)
     parser := New(lexer)
     program := parser.ParseProgram()
 
     checkParserErrors(t, parser)
+
     if len(program.Statements) != 1 {
         t.Fatalf("program.Body does not contain %d statements. got=%d\n",
             1, len(program.Statements))
@@ -531,7 +535,7 @@ func TestIfExpression(t *testing.T) {
 }
 
 func TestIfElseExpression(t *testing.T) {
-    input := `if (x < y) { x } else { y }`
+    input := `if (x < y) { x; } else { y; }`
 
     lexer := lexer.New(input)
     parser := New(lexer)
@@ -575,7 +579,7 @@ func TestIfElseExpression(t *testing.T) {
 }
 
 func TestParseFunctionLiteral(t *testing.T) {
-    input := `fn(x, y) {x + y;}`
+    input := `fn(x, y) {x + y;};`
 
     lexer := lexer.New(input)
     parser := New(lexer)
@@ -622,9 +626,9 @@ func TestParseFunctionParameters(t *testing.T) {
         input string
         expected []string
     } {
-        {input: "fn() {}", expected: []string{}},
-        {input: "fn(x) {}", expected: []string{"x"}},
-        {input: "fn(x, y, z) {}", expected: []string{"x", "y", "z"}},
+        {input: "fn() {};", expected: []string{}},
+        {input: "fn(x) {};", expected: []string{"x"}},
+        {input: "fn(x, y, z) {};", expected: []string{"x", "y", "z"}},
     }
 
     for _, test := range tests {
@@ -715,7 +719,7 @@ func TestStringLiteralExpression(t *testing.T) {
 }
 
 func TestArrayLiteral(t *testing.T) {
-    input := "[1, 2 * 2, 3 + 3]"
+    input := "[1, 2 * 2, 3 + 3];"
 
     lexer := lexer.New(input)
     parser := New(lexer)
@@ -737,7 +741,7 @@ func TestArrayLiteral(t *testing.T) {
 }
 
 func TestParsingHashMapLiteralsStringKeys(t *testing.T) {
-    input := `{"one": 1, "two": 2, "three": 3}`
+    input := `{"one": 1, "two": 2, "three": 3};`
 
     l := lexer.New(input)
     p := New(l)
@@ -864,24 +868,19 @@ func testLiteralExpression(t *testing.T, exp ast.Expression, expected any) bool 
 }
 
 func testLetStatement(t *testing.T, stmt ast.Statement, name string) bool {
-    if stmt.TokenLiteral() != "let" {
-        t.Errorf("stmt.TokenLiteral not 'let'. got=%q", stmt.TokenLiteral())
-        return false
-    }
-
-    letStmt, ok := stmt.(*ast.LetStatement)
+    assignStmt, ok := stmt.(*ast.AssignmentStatement)
     if !ok {
-        t.Errorf("stmt not of type *ast.LetStatement. got=%q", stmt.TokenLiteral())
+        t.Errorf("stmt not of type *ast.AssignmentStatement. got=%q", stmt.TokenLiteral())
         return false
     }
 
-    if letStmt.Identifier.Value != name {
-        t.Errorf("letStmt.Identifier.value not %s. got=%s", name, letStmt.Identifier.Value)
+    if assignStmt.Identifier.Value != name {
+        t.Errorf("assignStmt.Identifier.value not %s. got=%s", name, assignStmt.Identifier.Value)
         return false
     }
 
-    if letStmt.Identifier.TokenLiteral() != name {
-        t.Errorf("stmt.Identifier not %s. got=%s", name, letStmt.Identifier)
+    if assignStmt.Identifier.TokenLiteral() != name {
+        t.Errorf("stmt.Identifier not %s. got=%s", name, assignStmt.Identifier)
         return false
     }
 

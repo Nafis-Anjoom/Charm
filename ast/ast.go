@@ -57,20 +57,19 @@ func (id *Identifier) String() string {
     return id.Value
 }
 
-type LetStatement struct {
+type AssignmentStatement struct {
 	Token      token.Token
 	Identifier *Identifier
 	Value      Expression
 }
 
-func (ls *LetStatement) statementNode() {}
-func (ls *LetStatement) TokenLiteral() string {
+func (ls *AssignmentStatement) statementNode() {}
+func (ls *AssignmentStatement) TokenLiteral() string {
 	return ls.Token.Literal
 }
-func (ls *LetStatement) String() string {
+func (ls *AssignmentStatement) String() string {
     var out bytes.Buffer
 
-    out.WriteString(ls.TokenLiteral() + " ")
     out.WriteString(ls.Identifier.String())
     out.WriteString(" = ")
 
