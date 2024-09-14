@@ -11,6 +11,7 @@ type Token struct {
 const (
     ILLEGAL = "ILLEGAL"
 	EOF     = "EOF"
+    STRING  = "STRING"
 
 	// Identifiers + literals
 	IDENT = "IDENT" // add, foobar, x, y, ...
@@ -52,8 +53,7 @@ const (
 	IF       = "IF"
 	ELSE     = "ELSE"
 	RETURN   = "RETURN"
-
-    STRING  = "STRING"
+    WHILE    = "WHILE"
 )
 
 var keywords = map[string]TokenType {
@@ -64,6 +64,7 @@ var keywords = map[string]TokenType {
     "if": IF,
     "else": ELSE,
     "return": RETURN,
+    "while": WHILE,
 }
 
 func LookupIdentifier(identifier string) TokenType {

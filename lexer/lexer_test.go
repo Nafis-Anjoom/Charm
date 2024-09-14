@@ -28,6 +28,7 @@ func TestNextToken(t *testing.T) {
     "hello, world!@#"
     gg[0]
     {"foo": "bar"}
+    while (true)
     `   
     tests := []struct {
         expectedType token.TokenType
@@ -125,6 +126,10 @@ func TestNextToken(t *testing.T) {
         {token.COLON, ":"},
         {token.STRING, "bar"},
         {token.RBRACE, "}"},
+        {token.WHILE, "while"},
+        {token.LPAREN, "("},
+        {token.TRUE, "true"},
+        {token.RPAREN, ")"},
         {token.EOF, ""},
     }
 
