@@ -1,36 +1,36 @@
 package ast
 
 import (
-	"bytes"
-	"charm/token"
-	"strings"
+    "bytes"
+    "charm/token"
+    "strings"
 )
 
 type Node interface {
-	TokenLiteral() string
+    TokenLiteral() string
     String() string
 }
 
 type Statement interface {
-	Node
-	statementNode()
+    Node
+    statementNode()
 }
 
 type Expression interface {
-	Node
-	expressionNode()
+    Node
+    expressionNode()
 }
 
 type Program struct {
-	Statements []Statement
+    Statements []Statement
 }
 
 func (program *Program) TokenLiteral() string {
-	if len(program.Statements) > 0 {
-		return program.Statements[0].TokenLiteral()
-	} else {
-		return ""
-	}
+    if len(program.Statements) > 0 {
+        return program.Statements[0].TokenLiteral()
+    } else {
+        return ""
+    }
 }
 
 func (program *Program) String() string {
@@ -45,27 +45,27 @@ func (program *Program) String() string {
 
 // implements Expression node because it returns value
 type Identifier struct {
-	Token token.Token
-	Value string
+    Token token.Token
+    Value string
 }
 
 func (id *Identifier) expressionNode() {}
 func (id *Identifier) TokenLiteral() string {
-	return id.Token.Literal
+    return id.Token.Literal
 }
 func (id *Identifier) String() string {
     return id.Value
 }
 
 type AssignmentStatement struct {
-	Token      token.Token
-	Identifier *Identifier
-	Value      Expression
+    Token      token.Token
+    Identifier *Identifier
+    Value      Expression
 }
 
 func (ls *AssignmentStatement) statementNode() {}
 func (ls *AssignmentStatement) TokenLiteral() string {
-	return ls.Token.Literal
+    return ls.Token.Literal
 }
 func (ls *AssignmentStatement) String() string {
     var out bytes.Buffer
@@ -83,13 +83,13 @@ func (ls *AssignmentStatement) String() string {
 
 
 type ReturnStatement struct {
-	Token      token.Token
-	ReturnValue      Expression
+    Token      token.Token
+    ReturnValue      Expression
 }
 
 func (rs *ReturnStatement) statementNode() {}
 func (rs *ReturnStatement) TokenLiteral() string {
-	return rs.Token.Literal
+    return rs.Token.Literal
 }
 func (rs *ReturnStatement) String() string {
     var out bytes.Buffer
@@ -111,7 +111,7 @@ type ExpressionStatement struct {
 
 func (es *ExpressionStatement) statementNode() {}
 func (es *ExpressionStatement) TokenLiteral() string {
-	return es.Token.Literal
+    return es.Token.Literal
 }
 func (es *ExpressionStatement) String() string {
     if es.Expression != nil {
@@ -133,12 +133,23 @@ func (il *IntegerLiteral) String() string {
     return il.Token.Literal
 }
 
+type FloatLiteral struct {
+    Token token.Token
+    Value float64
+}
+func (fl *FloatLiteral) expressionNode() {}
+func (fl *FloatLiteral) TokenLiteral() string {
+    return fl.Token.Literal
+}
+func (fl *FloatLiteral) String() string {
+    return fl.Token.Literal
+}
+
 type PrefixExpression struct {
     Token token.Token
     Operator string
     Right Expression
 }
-
 func (pe *PrefixExpression) expressionNode() {}
 func (pe *PrefixExpression) TokenLiteral() string {
     return pe.Token.Literal
@@ -196,7 +207,7 @@ type BlockStatement struct {
 }
 func (bs *BlockStatement) statementNode() {}
 func (bs *BlockStatement) TokenLiteral() string {
-	return bs.Token.Literal
+    return bs.Token.Literal
 }
 func (bs *BlockStatement) String() string {
     var out bytes.Buffer
@@ -224,7 +235,7 @@ func (ie *IfStatement) String() string {
 
     if ie.Alternative != nil {
         out.WriteString("else ")
-    out.WriteString(ie.Alternative.String())
+        out.WriteString(ie.Alternative.String())
     }
 
     return out.String()
@@ -320,7 +331,7 @@ func (a *ArrayLiteral) String() string {
     out.WriteString("[")
     out.WriteString(strings.Join(elements, ", "))
     out.WriteString("]")
-    
+
     return out.String()
 }
 

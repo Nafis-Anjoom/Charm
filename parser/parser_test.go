@@ -244,6 +244,38 @@ func TestIntegerLiteralExpression(t *testing.T) {
     }
 }
 
+func TestFloatLiteralExpression(t *testing.T) {
+    input := "5.4321;"
+
+    lexer := lexer.New(input)
+    parser := New(lexer)
+    program := parser.ParseProgram()
+
+    checkParserErrors(t, parser)
+
+    if len(program.Statements) != 1 {
+        t.Fatalf("program has not enough statements. got=%d", len(program.Statements))
+    }
+
+    expStmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+    if !ok {
+        t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T", program.Statements[0])
+    }
+
+    floatLiteral, ok := expStmt.Expression.(*ast.FloatLiteral)
+    if !ok {
+        t.Fatalf("exp is not *ast.FloatLiteral. got=%T", expStmt)
+    }
+
+    if floatLiteral.Value != float64(5.4321) {
+        t.Fatalf("floatLiteral.value is not 5.4321. got=%f", floatLiteral.Value)
+    }
+
+    if floatLiteral.TokenLiteral() != "5.4321" {
+        t.Fatalf("intLiteral.TokenLiteral() is not 5.4321. got=%s", floatLiteral.TokenLiteral())
+    }
+}
+
 func TestParsingPrefixExpressions(t *testing.T) {
     prefixTests := []struct {
         input string
