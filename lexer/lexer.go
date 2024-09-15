@@ -114,8 +114,7 @@ func (lexer *Lexer) NextToken() token.Token {
                 tok.Type = token.LookupIdentifier(tok.Literal)
                 return tok
             } else if isDigit(lexer.ch) {
-                tok.Literal = lexer.readNumber()
-                tok.Type = token.INT
+                tok = lexer.tokenizeNumber()
                 return tok
             }else {
                 tok = newToken(token.ILLEGAL, lexer.ch)
@@ -172,15 +171,24 @@ func (lexer *Lexer) readString() string {
     return string(lexer.input[startPosition: lexer.position])
 }
 
-// TODO: support floats
-func (lexer *Lexer) readNumber() string {
+func (lexer *Lexer) tokenizeNumber() token.Token {
     position := lexer.position
+    var tokenType token.TokenType = token.INT
 
     for isDigit(lexer.ch) {
         lexer.readChar()
     }
 
-    return string(lexer.input[position: lexer.position])
+    if lexer.ch == '.' {
+        lexer.readChar()
+        tokenType = token.FLOAT
+        for isDigit(lexer.ch) {
+            lexer.readChar()
+        }
+    }
+
+    literal := string(lexer.input[position: lexer.position])
+    return token.Token{Literal: literal, Type: tokenType}
 }
 
 func newToken(tokenType token.TokenType, ch rune) token.Token {

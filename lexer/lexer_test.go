@@ -31,6 +31,7 @@ func TestNextToken(t *testing.T) {
     {"foo": "bar"}
     while (true)
     foo123
+    1234.1234
     `   
 
     tests := []struct {
@@ -130,6 +131,7 @@ func TestNextToken(t *testing.T) {
         {token.TRUE, "true"},
         {token.RPAREN, ")"},
         {token.IDENT, "foo123"},
+        {token.FLOAT, "1234.1234"},
         {token.EOF, ""},
     }
 
