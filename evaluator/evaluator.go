@@ -198,8 +198,12 @@ func evalIntegerInfixExpression(left int64, operator string, right int64) object
         return &object.Integer{Value: left / right}
     case "<":
         return nativeBooltoBoolObject(left < right)
+    case "<=":
+        return nativeBooltoBoolObject(left <= right)
     case ">":
         return nativeBooltoBoolObject(left > right)
+    case ">=":
+        return nativeBooltoBoolObject(left >= right)
     case "==":
         return nativeBooltoBoolObject(left == right)
     case "!=":
@@ -221,8 +225,12 @@ func evalFloatInfixExpression(left float64, operator string, right float64) obje
         return &object.Float{Value: left / right}
     case "<":
         return nativeBooltoBoolObject(left < right)
+    case "<=":
+        return nativeBooltoBoolObject(left <= right)
     case ">":
         return nativeBooltoBoolObject(left > right)
+    case ">=":
+        return nativeBooltoBoolObject(left >= right)
     case "==":
         return nativeBooltoBoolObject(left == right)
     case "!=":
