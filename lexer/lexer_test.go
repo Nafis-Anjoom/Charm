@@ -7,6 +7,7 @@ import (
 
 func TestNextToken(t *testing.T) {
     input := `five = 5;
+    # this is a comment
     ten = 10;
     add = func(x, y) {
     x + y;
@@ -30,8 +31,9 @@ func TestNextToken(t *testing.T) {
     {"foo": "bar"}
     while (true)
     `   
+
     tests := []struct {
-        expectedType token.TokenType
+        expectedType token.TokenType 
         expectedLiteral string
     }{
         {token.IDENT, "five"},

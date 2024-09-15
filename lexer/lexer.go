@@ -42,7 +42,7 @@ func (lexer *Lexer) peekChar() rune {
 func (lexer *Lexer) NextToken() token.Token {
     var tok token.Token
 
-    lexer.skipWhitespace()
+    lexer.skipWhitespaceAndComments()
 
     switch lexer.ch {
         case '=':
@@ -126,9 +126,19 @@ func (lexer *Lexer) NextToken() token.Token {
     return tok
 }
 
-func (lexer *Lexer) skipWhitespace() {
+func (lexer *Lexer) skipWhitespaceAndComments() {
     for lexer.ch == ' ' || lexer.ch == '\t' || lexer.ch == '\n' || lexer.ch == '\r' {
         lexer.readChar()
+    }
+
+    if lexer.ch == '#' {
+        for lexer.ch != '\n' {
+            lexer.readChar()
+        }
+
+        for lexer.ch == ' ' || lexer.ch == '\t' || lexer.ch == '\n' || lexer.ch == '\r' {
+            lexer.readChar()
+        }
     }
 }
 
