@@ -30,6 +30,7 @@ func TestNextToken(t *testing.T) {
     gg[0]
     {"foo": "bar"}
     while (true)
+    foo123
     `   
 
     tests := []struct {
@@ -128,6 +129,7 @@ func TestNextToken(t *testing.T) {
         {token.LPAREN, "("},
         {token.TRUE, "true"},
         {token.RPAREN, ")"},
+        {token.IDENT, "foo123"},
         {token.EOF, ""},
     }
 
@@ -143,6 +145,5 @@ func TestNextToken(t *testing.T) {
         if token.Literal != testCase.expectedLiteral {
             t.Fatalf("tests[%d] - literal wrong. expected=%q, got=%q", i, testCase.expectedLiteral, token.Literal)
         }
-
     }
 }

@@ -154,7 +154,7 @@ func isDigit(ch rune) bool {
 func (lexer *Lexer) readIdentifier() string {
     position := lexer.position
 
-    for isLetter(lexer.ch) {
+    for isLetter(lexer.ch) || isDigit(lexer.ch) {
         lexer.readChar()
     }
 
