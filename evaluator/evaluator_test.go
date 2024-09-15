@@ -5,6 +5,7 @@ import (
 	"charm/object"
 	"charm/parser"
 	"testing"
+    "math"
 )
 
 func TestEvalIntegerExpression(t *testing.T) {
@@ -34,6 +35,37 @@ func TestEvalIntegerExpression(t *testing.T) {
     for _, test := range tests {
         evaluated := evalTest(test.input)
         testIntegerObject(t, evaluated, test.expected)
+    }
+}
+
+func TestEvalFloatExpression(t *testing.T) {
+    tests := []struct {
+        input string
+        expected float64
+    } {
+        {"5.2;", 5.2},
+        {"10.5431;", 10.5431},
+
+        {"-5.2;", -5.2},
+        {"-10.5431;", -10.5431},
+
+        {"5.123 + 5.456 + 5.789 + 5.321 - 10.987;", 10.702},
+        {"2.345 * 2.678 * 2.123 * 2.987 * 2.111;", 84.067256},
+        {"-50.8765 + 100.4321 + -50.1234;", -0.5678},
+        {"5.2345 * 2.1234 + 10.5678;", 21.6827},
+        {"5.8765 + 2.3456 * 10.4321;", 30.34603376},
+        {"20.6789 + 2.3456 * -10.9876;", -5.09361456},
+        {"50.9876 / 2.2345 * 2.6789 + 10.4321;", 71.56017413},
+        {"2.3456 * (5.7891 + 10.4321);", 38.04844672},
+        {"3.1234 * 3.4321 * 3.9876 + 10.5678;", 53.31415878},
+        {"3.9876 * (3.8765 * 3.2345) + 10.1234;", 60.12207911},
+        {"(5.4321 + 10.9876 * 2.1234 + 15.8765 / 3.1234) * 2.9876 + -10.4321;", 90.68696361},
+
+    }
+
+    for _, test := range tests {
+        evaluated := evalTest(test.input)
+        testFloatObject(t, evaluated, test.expected)
     }
 }
 
@@ -571,6 +603,23 @@ func testIntegerObject(t *testing.T, evaluated object.Object, expected int64) bo
 
     if intObj.Value != expected {
         t.Errorf("object has wrong value. Expected %d, got %d\n", expected, intObj.Value)
+        return false
+    }
+
+    return true
+}
+
+func testFloatObject(t *testing.T, evaluated object.Object, expected float64) bool{
+    epsilon := 0.0001
+
+    floatObj, ok := evaluated.(*object.Float)
+    if !ok {
+        t.Errorf("object is not an float. Got=%T (%+v)", evaluated, evaluated)
+        return false
+    }
+
+    if math.Abs(floatObj.Value - expected) >= epsilon {
+        t.Errorf("object has wrong value. Expected %f, got %f\n", expected, floatObj.Value)
         return false
     }
 

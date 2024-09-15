@@ -20,6 +20,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
         return Eval(node.Expression, env)
     case *ast.IntegerLiteral:
         return &object.Integer{Value: node.Value}
+    case *ast.FloatLiteral:
+        return &object.Float{Value: node.Value}
     case *ast.StringLiteral:
         return &object.String{Value: node.Value}
     case *ast.BooleanLiteral:
@@ -128,11 +130,14 @@ func evalBangPrefixExpression(right object.Object) object.Object {
 
 // DNOTE: if right expression not integers, then return NULL
 func evalMinusPrefixExpression(right object.Object) object.Object {
-    if right.Type() != object.INTEGER_OBJ {
+    switch obj := right.(type) {
+    case *object.Integer:
+        return &object.Integer{Value: -obj.Value}
+    case *object.Float:
+        return &object.Float{Value: -obj.Value}
+    default:
         return newError("unknown operator: -%s", right.Type())
     }
-    value := right.(*object.Integer).Value
-    return &object.Integer{Value: -value}
 }
 
 func evalInfixExpression(exp *ast.InfixExpression, env *object.Environment) object.Object {
@@ -150,6 +155,22 @@ func evalInfixExpression(exp *ast.InfixExpression, env *object.Environment) obje
         rightValue := right.(*object.Integer).Value
         leftValue := left.(*object.Integer).Value
         return evalIntegerInfixExpression(leftValue, exp.Operator, rightValue)
+
+    case right.Type() == object.INTEGER_OBJ && left.Type() == object.FLOAT_OBJ:
+        rightValue := float64(right.(*object.Integer).Value)
+        leftValue := float64(left.(*object.Float).Value)
+        return evalFloatInfixExpression(leftValue, exp.Operator, rightValue)
+
+    case right.Type() == object.FLOAT_OBJ && left.Type() == object.INTEGER_OBJ:
+        rightValue := float64(right.(*object.Float).Value)
+        leftValue := float64(left.(*object.Integer).Value)
+        return evalFloatInfixExpression(leftValue, exp.Operator, rightValue)
+
+    case right.Type() == object.FLOAT_OBJ && left.Type() == object.FLOAT_OBJ:
+        rightValue := right.(*object.Float).Value
+        leftValue := left.(*object.Float).Value
+        return evalFloatInfixExpression(leftValue, exp.Operator, rightValue)
+
     case right.Type() == object.STRING_OBJ && left.Type() == object.STRING_OBJ && exp.Operator == "+":
         rightValue := right.(*object.String).Value
         leftValue := left.(*object.String).Value
@@ -175,6 +196,29 @@ func evalIntegerInfixExpression(left int64, operator string, right int64) object
         return &object.Integer{Value: left * right}
     case "/":
         return &object.Integer{Value: left / right}
+    case "<":
+        return nativeBooltoBoolObject(left < right)
+    case ">":
+        return nativeBooltoBoolObject(left > right)
+    case "==":
+        return nativeBooltoBoolObject(left == right)
+    case "!=":
+        return nativeBooltoBoolObject(left != right)
+    default:
+        return NULL
+    }
+}
+
+func evalFloatInfixExpression(left float64, operator string, right float64) object.Object {
+    switch operator {
+    case "+":
+        return &object.Float{Value: left + right}
+    case "-":
+        return &object.Float{Value: left - right}
+    case "*":
+        return &object.Float{Value: left * right}
+    case "/":
+        return &object.Float{Value: left / right}
     case "<":
         return nativeBooltoBoolObject(left < right)
     case ">":
