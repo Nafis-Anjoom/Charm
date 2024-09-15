@@ -22,7 +22,6 @@ func main() {
         if err != nil {
             fmt.Printf("error reading file: %s\n", filePath)
         }
-
         lexer := lexer.New(string(file))
         parser := parser.New(lexer)
         program := parser.ParseProgram()

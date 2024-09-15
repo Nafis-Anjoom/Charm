@@ -126,19 +126,18 @@ func (lexer *Lexer) NextToken() token.Token {
 }
 
 func (lexer *Lexer) skipWhitespaceAndComments() {
-    for lexer.ch == ' ' || lexer.ch == '\t' || lexer.ch == '\n' || lexer.ch == '\r' {
+    for lexer.ch == ' ' || lexer.ch == '\t' ||
+        lexer.ch == '\n' || lexer.ch == '\r' || lexer.ch == '#' {
+
+        if lexer.ch == '#' {
+            for lexer.ch != '\n' {
+                lexer.readChar()
+            }
+        }
+
         lexer.readChar()
     }
 
-    if lexer.ch == '#' {
-        for lexer.ch != '\n' {
-            lexer.readChar()
-        }
-
-        for lexer.ch == ' ' || lexer.ch == '\t' || lexer.ch == '\n' || lexer.ch == '\r' {
-            lexer.readChar()
-        }
-    }
 }
 
 func isLetter(ch rune) bool {
