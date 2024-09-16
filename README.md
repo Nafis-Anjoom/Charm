@@ -10,7 +10,7 @@ I came away with a much deeper understanding of the tradeoffs between performanc
 ### Installation
 1. Clone the repository and navigate to the project directory.
  ```bash
- git clone https://github.com/Nafis-Anjoom/Charm
+ git https://github.com/Nafis-Anjoom/Charm.git
  cd charm
    ``` 
 2. Install [Go][go]. If already installed, make sure it's up-to-date.
