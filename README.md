@@ -60,7 +60,7 @@ greet = func(personName) {
 
 # Closure
 func generatePrinter(personAge) {
-  age = 99
+  age = 99;
 
   return func() {
     print("this person is", age, "years old.");
